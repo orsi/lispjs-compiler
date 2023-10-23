@@ -1,58 +1,106 @@
-export type Token = {
-    type: string;
-    value: any;
+type TokenType =
+    | 'left parenthesis'
+    | 'right parenthesis'
+    | 'left curly'
+    | 'right curly'
+    | 'left square'
+    | 'right square'
+    | 'number'
+    | 'plus'
+    | 'minus'
+    | 'star'
+    | 'forward slash'
+    | 'modulo'
+    | 'colon'
+    | 'identifier';
+export type SyntaxToken = {
+    type: TokenType;
+    value: unknown;
 };
 
-const LETTERS = /[a-z/]/i;
-const WHITESPACE = /\s/;
-const NUMBERS = /\d/;
+const IS_LETTER = /[a-z/]/i;
+const IS_WHITESPACE = /\s/;
+const IS_NUMBER = /\d/;
+
 export function lex(input: string) {
-    const tokens: Token[] = [];
-    let current = 0;
-    while (current < input.length) {
-        let char = input[current];
+    const tokens: SyntaxToken[] = [];
+    let currentPosition = 0;
+    while (currentPosition < input.length) {
+        let character = input[currentPosition];
 
-        if (char === '(' || char === ')') {
+        if (character === '(') {
             tokens.push({
-                type: 'parenthesis',
-                value: char,
+                type: 'left parenthesis',
+                value: '(',
             });
-            current++;
-            continue;
-        }
-
-        if (LETTERS.test(char)) {
+            currentPosition++;
+        } else if (character === ')') {
+            tokens.push({
+                type: 'right parenthesis',
+                value: ')',
+            });
+            currentPosition++;
+        } else if (character === '+') {
+            tokens.push({
+                type: 'plus',
+                value: '+',
+            });
+            currentPosition++;
+        } else if (character === '-') {
+            tokens.push({
+                type: 'minus',
+                value: '-',
+            });
+            currentPosition++;
+        } else if (character === '*') {
+            tokens.push({
+                type: 'star',
+                value: '*',
+            });
+            currentPosition++;
+        } else if (character === '/') {
+            tokens.push({
+                type: 'forward slash',
+                value: '/',
+            });
+            currentPosition++;
+        } else if (character === '%') {
+            tokens.push({
+                type: 'modulo',
+                value: '%',
+            });
+            currentPosition++;
+        } else if (character === ':') {
+            tokens.push({
+                type: 'colon',
+                value: ':',
+            });
+            currentPosition++;
+        } else if (IS_LETTER.test(character)) {
             let value = '';
-            while (LETTERS.test(char)) {
-                value += char;
-                char = input[++current];
+            while (IS_LETTER.test(character)) {
+                value += character;
+                character = input[++currentPosition];
             }
             tokens.push({
-                type: 'name',
+                type: 'identifier',
                 value,
             });
-            continue;
-        }
-
-        if (WHITESPACE.test(char)) {
-            current++;
-            continue;
-        }
-
-        if (NUMBERS.test(char)) {
+        } else if (IS_WHITESPACE.test(character)) {
+            currentPosition++;
+        } else if (IS_NUMBER.test(character)) {
             let value = '';
-            while (NUMBERS.test(char)) {
-                value += char;
-                char = input[++current];
+            while (IS_NUMBER.test(character)) {
+                value += character;
+                character = input[++currentPosition];
             }
             tokens.push({
                 type: 'number',
                 value,
             });
-            continue;
+        } else {
+            throw new TypeError(`Unknown char: ${character}`);
         }
-
-        throw new TypeError(`Unknown char: ${char}`);
     }
     return tokens;
 }

@@ -1,35 +1,76 @@
-import type { Token } from './lex.ts';
-export function parse(tokens: Token[]) {
-    let current = 0;
-    function walk() {
-        let token = tokens[current];
+import type { SyntaxToken } from './lex.ts';
 
-        if (token.type === 'number') {
-            current++;
-            return {
-                type: 'NumberLiteral',
-                value: token.value,
-            };
-        }
-        if (token.type === 'parenthesis' && token.value === '(') {
-            token = tokens[++current];
-            const expression: any = {
-                type: 'CallExpression',
-                name: token.value,
-                params: [],
-            };
-            token = tokens[++current];
-            while (token.value !== ')') {
-                expression.params.push(walk());
-                token = tokens[current];
-            }
-            current++;
-            return expression;
-        }
+type NodeType = 'program' | 'binary expression' | 'factor';
+type Node = {
+    type: NodeType;
+    token: SyntaxToken | null;
+    body: Node[];
+};
+interface ProgramNode extends Node {
+    type: 'program';
+    token: null;
+}
+interface BinaryExpressionNode extends Node {
+    type: 'binary expression';
+    body: [Node, Node];
+}
+interface FactorNode extends Node {
+    type: 'factor';
+    token: SyntaxToken;
+}
+
+export function parse(tokens: SyntaxToken[]) {
+    let currentTokenPosition = 0;
+
+    function getFactor(token: SyntaxToken) {
+        return {
+            type: 'factor',
+            token,
+        } as FactorNode;
     }
-    const ast = {
-        type: 'Program',
-        body: [walk()],
+
+    const ast: ProgramNode = {
+        type: 'program',
+        token: null,
+        body: [],
     };
+
+    let token = tokens[currentTokenPosition];
+    let left: Node = getFactor(token);
+    token = tokens[++currentTokenPosition];
+    while (
+        token &&
+        (token.type === 'plus' ||
+            token.type === 'minus' ||
+            token.type === 'star' ||
+            token.type === 'forward slash')
+    ) {
+        const right = getFactor(tokens[++currentTokenPosition]);
+        const expression = {
+            type: 'binary expression',
+            token,
+            body: [left, right],
+        } as BinaryExpressionNode;
+        left = expression;
+        token = tokens[++currentTokenPosition];
+    }
+    ast.body.push(left);
+
     return ast;
+}
+
+export function printTree(node: Node, indent = '', isLast = true) {
+    const marker = isLast ? '`---' : '|---';
+
+    console.log(
+        `${indent}${marker}${node.type}${
+            node?.token?.value ? ' ' + node?.token?.value : ''
+        }`
+    );
+
+    indent += isLast ? '    ' : '|   ';
+    for (let i = 0; i < node.body?.length; i++) {
+        const child = node.body[i];
+        printTree(child, indent, i === node.body?.length - 1);
+    }
 }
