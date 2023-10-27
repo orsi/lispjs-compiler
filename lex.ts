@@ -1,21 +1,18 @@
 type TokenType =
     | 'left parenthesis'
     | 'right parenthesis'
-    | 'left curly'
-    | 'right curly'
-    | 'left square'
-    | 'right square'
-    | 'number'
     | 'plus'
     | 'minus'
     | 'star'
     | 'forward slash'
     | 'modulo'
-    | 'colon'
+    | 'end of file'
+    | 'unknown'
+    | 'number'
     | 'identifier';
 export type SyntaxToken = {
     type: TokenType;
-    value: unknown;
+    value: string;
 };
 
 const IS_LETTER = /[a-z/]/i;
@@ -25,10 +22,16 @@ const IS_NUMBER = /\d/;
 export function lex(input: string) {
     const tokens: SyntaxToken[] = [];
     let currentPosition = 0;
-    while (currentPosition < input.length) {
+    while (currentPosition <= input.length) {
         let character = input[currentPosition];
 
-        if (character === '(') {
+        if (!character) {
+            tokens.push({
+                type: 'end of file',
+                value: '',
+            });
+            currentPosition++;
+        } else if (character === '(') {
             tokens.push({
                 type: 'left parenthesis',
                 value: '(',
@@ -70,12 +73,6 @@ export function lex(input: string) {
                 value: '%',
             });
             currentPosition++;
-        } else if (character === ':') {
-            tokens.push({
-                type: 'colon',
-                value: ':',
-            });
-            currentPosition++;
         } else if (IS_LETTER.test(character)) {
             let value = '';
             while (IS_LETTER.test(character)) {
@@ -99,7 +96,10 @@ export function lex(input: string) {
                 value,
             });
         } else {
-            throw new TypeError(`Unknown char: ${character}`);
+            tokens.push({
+                type: 'unknown',
+                value: character,
+            });
         }
     }
     return tokens;

@@ -1,7 +1,5 @@
-import { generate } from './generate.ts';
 import { lex } from './lex.ts';
 import { parse, printTree } from './parse.ts';
-import { transform } from './transform.ts';
 
 let showTokens = true;
 let showAst = true;
