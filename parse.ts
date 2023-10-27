@@ -1,5 +1,6 @@
 import type { SyntaxToken } from './lex.ts';
 
+export type Operator = '+' | '-' | '*' | '/' | '%';
 export type NodeType =
     | 'program'
     | 'statement'
@@ -23,7 +24,7 @@ export interface BinaryExpressionNode extends Node {
     type: 'binary expression';
     left: Node;
     right: Node;
-    operator: string;
+    operator: Operator;
 }
 export interface StringLiteralNode extends Node {
     type: 'string';
@@ -69,14 +70,37 @@ export function parse(tokens: SyntaxToken[]) {
             currentToken.type === 'plus' ||
             currentToken.type === 'minus' ||
             currentToken.type === 'star' ||
-            currentToken.type === 'forward slash'
+            currentToken.type === 'forward slash' ||
+            currentToken.type === 'modulo'
         ) {
-            return {
-                type: 'binary expression',
-                operator: currentToken.value,
-                left: stack.pop()!,
-                right: parseToken(tokens, stack),
-            } as BinaryExpressionNode;
+            const operator = currentToken.value as Operator;
+
+            // check if previous node was binary
+            // and compare their operator precedence
+            const lastNode = stack.pop();
+            const hasGreaterPrecedence =
+                lastNode &&
+                lastNode.type === 'binary expression' &&
+                getOperatorPrecedence(
+                    (lastNode as BinaryExpressionNode).operator
+                ) < getOperatorPrecedence(operator as Operator);
+            if (hasGreaterPrecedence) {
+                const newNode = (lastNode as BinaryExpressionNode).right;
+                (lastNode as BinaryExpressionNode).right = {
+                    type: 'binary expression',
+                    operator: operator,
+                    left: newNode,
+                    right: parseToken(tokens, stack),
+                } as BinaryExpressionNode;
+                return lastNode;
+            } else {
+                return {
+                    type: 'binary expression',
+                    operator: operator,
+                    left: lastNode,
+                    right: parseToken(tokens, stack),
+                } as BinaryExpressionNode;
+            }
         } else if (currentToken.type === 'left parenthesis') {
             let innerToken = tokens[0];
             while (innerToken.type !== 'right parenthesis') {
@@ -98,6 +122,14 @@ export function parse(tokens: SyntaxToken[]) {
     }
 
     return ast;
+}
+
+function getOperatorPrecedence(operator: Operator) {
+    if (operator === '*' || operator === '/' || operator === '%') {
+        return 1;
+    } else {
+        return 0;
+    }
 }
 
 export function printTree(node: Node | undefined, indent = '', isLast = true) {
