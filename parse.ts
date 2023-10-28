@@ -1,13 +1,15 @@
 import type { SyntaxToken } from './lex.ts';
 
-export type Operator = '+' | '-' | '*' | '/' | '%';
+export type Operator = '+' | '-' | '*' | '/' | '%' | ':';
 export type NodeType =
     | 'program'
     | 'statement'
     | 'binary expression'
-    | 'string'
-    | 'number'
-    | 'unknown'
+    | 'assignment expression'
+    | 'identifier'
+    | 'string literal'
+    | 'number literal'
+    | 'unexpected'
     | 'end of file';
 export type Node = {
     type: NodeType;
@@ -26,17 +28,27 @@ export interface BinaryExpressionNode extends Node {
     right: Node;
     operator: Operator;
 }
+export interface AssignmentExpressionNode extends Node {
+    type: 'assignment expression';
+    left: IdentifierNode;
+    right: Node;
+    operator: Operator;
+}
+export interface IdentifierNode extends Node {
+    type: 'identifier';
+    name: string;
+}
 export interface StringLiteralNode extends Node {
-    type: 'string';
+    type: 'string literal';
     value: string;
 }
 export interface NumberLiteralNode extends Node {
-    type: 'number';
+    type: 'number literal';
     value: number;
 }
-export interface UnknownNode extends Node {
-    type: 'unknown';
-    value: string;
+export interface UnexpectedNode extends Node {
+    type: 'unexpected';
+    token: SyntaxToken;
 }
 export interface EndOfFileNode extends Node {
     type: 'end of file';
@@ -54,70 +66,97 @@ export function parse(tokens: SyntaxToken[]) {
 
     function parseToken(tokens: SyntaxToken[], stack: Node[]): Node {
         const currentToken = tokens.shift();
-        if (!currentToken) {
-            // we did something wrong here didn't we?
-            throw new Error('whoops');
-        } else if (currentToken.type === 'end of file') {
-            return {
-                type: 'end of file',
-            } as EndOfFileNode;
-        } else if (currentToken.type === 'number') {
-            return {
-                type: 'number',
-                value: parseFloat(currentToken.value),
-            } as NumberLiteralNode;
-        } else if (
-            currentToken.type === 'plus' ||
-            currentToken.type === 'minus' ||
-            currentToken.type === 'star' ||
-            currentToken.type === 'forward slash' ||
-            currentToken.type === 'modulo'
-        ) {
-            const operator = currentToken.value as Operator;
 
-            // check if previous node was binary
-            // and compare their operator precedence
-            const lastNode = stack.pop();
-            const hasGreaterPrecedence =
-                lastNode &&
-                lastNode.type === 'binary expression' &&
-                getOperatorPrecedence(
-                    (lastNode as BinaryExpressionNode).operator
-                ) < getOperatorPrecedence(operator as Operator);
-            if (hasGreaterPrecedence) {
-                const newNode = (lastNode as BinaryExpressionNode).right;
-                (lastNode as BinaryExpressionNode).right = {
-                    type: 'binary expression',
-                    operator: operator,
-                    left: newNode,
-                    right: parseToken(tokens, stack),
-                } as BinaryExpressionNode;
-                return lastNode;
-            } else {
+        switch (currentToken?.type) {
+            case 'number': {
                 return {
-                    type: 'binary expression',
+                    type: 'number literal',
+                    value: parseFloat(currentToken.value),
+                } as NumberLiteralNode;
+            }
+            case 'string': {
+                return {
+                    type: 'string literal',
+                    value: currentToken.value,
+                } as StringLiteralNode;
+            }
+            case 'identifier': {
+                return {
+                    type: 'identifier',
+                    name: currentToken.value,
+                } as IdentifierNode;
+            }
+            case 'colon': {
+                const operator = currentToken.value as Operator;
+                const lastNode = stack.pop();
+                return {
+                    type: 'assignment expression',
                     operator: operator,
                     left: lastNode,
                     right: parseToken(tokens, stack),
-                } as BinaryExpressionNode;
+                } as AssignmentExpressionNode;
             }
-        } else if (currentToken.type === 'left parenthesis') {
-            let innerToken = tokens[0];
-            while (innerToken.type !== 'right parenthesis') {
-                const node = parseToken(tokens, stack);
-                stack.push(node);
-                innerToken = tokens[0];
+            case 'plus':
+            case 'minus':
+            case 'star':
+            case 'forward slash':
+            case 'modulo': {
+                const operator = currentToken.value as Operator;
+
+                // check if previous node was binary
+                // and compare their operator precedence
+                const lastNode = stack.pop();
+                const hasGreaterPrecedence =
+                    lastNode &&
+                    lastNode.type === 'binary expression' &&
+                    getOperatorPrecedence(
+                        (lastNode as BinaryExpressionNode).operator
+                    ) < getOperatorPrecedence(operator as Operator);
+                if (hasGreaterPrecedence) {
+                    const newNode = (lastNode as BinaryExpressionNode).right;
+                    (lastNode as BinaryExpressionNode).right = {
+                        type: 'binary expression',
+                        operator: operator,
+                        left: newNode,
+                        right: parseToken(tokens, stack),
+                    } as BinaryExpressionNode;
+                    return lastNode;
+                } else {
+                    return {
+                        type: 'binary expression',
+                        operator: operator,
+                        left: lastNode,
+                        right: parseToken(tokens, stack),
+                    } as BinaryExpressionNode;
+                }
             }
-            tokens.shift(); // eat right parenthesis
-            return {
-                type: 'statement',
-                statement: stack.pop(),
-            } as StatementNode;
-        } else {
-            return {
-                type: 'unknown',
-                value: currentToken.value,
-            } as UnknownNode;
+            case 'semicolon': {
+                return stack.pop()!;
+            }
+            case 'left parenthesis': {
+                let innerToken = tokens[0];
+                while (innerToken.type !== 'right parenthesis') {
+                    const node = parseToken(tokens, stack);
+                    stack.push(node);
+                    innerToken = tokens[0];
+                }
+                tokens.shift(); // eat right parenthesis
+                return {
+                    type: 'statement',
+                    statement: stack.pop(),
+                } as StatementNode;
+            }
+            case 'end of file': {
+                return {
+                    type: 'end of file',
+                } as EndOfFileNode;
+            }
+            default: {
+                return {
+                    type: 'unexpected',
+                    token: currentToken,
+                } as UnexpectedNode;
+            }
         }
     }
 
@@ -136,7 +175,7 @@ export function printTree(node: Node | undefined, indent = '', isLast = true) {
     const marker = isLast ? '`---' : '|---';
 
     let value;
-    if (node?.type === 'number') {
+    if (node?.type === 'number literal') {
         value = (node as NumberLiteralNode).value;
     } else if (node?.type === 'binary expression') {
         value = (node as BinaryExpressionNode).operator;

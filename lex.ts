@@ -6,9 +6,13 @@ type TokenType =
     | 'star'
     | 'forward slash'
     | 'modulo'
+    | 'colon'
+    | 'semicolon'
+    | 'double quote'
     | 'end of file'
     | 'unknown'
     | 'number'
+    | 'string'
     | 'identifier';
 export type SyntaxToken = {
     type: TokenType;
@@ -16,7 +20,6 @@ export type SyntaxToken = {
 };
 
 const IS_LETTER = /[a-z/]/i;
-const IS_WHITESPACE = /\s/;
 const IS_NUMBER = /\d/;
 
 export function lex(input: string) {
@@ -25,81 +28,136 @@ export function lex(input: string) {
     while (currentPosition <= input.length) {
         let character = input[currentPosition];
 
-        if (!character) {
-            tokens.push({
-                type: 'end of file',
-                value: '',
-            });
-            currentPosition++;
-        } else if (character === '(') {
-            tokens.push({
-                type: 'left parenthesis',
-                value: '(',
-            });
-            currentPosition++;
-        } else if (character === ')') {
-            tokens.push({
-                type: 'right parenthesis',
-                value: ')',
-            });
-            currentPosition++;
-        } else if (character === '+') {
-            tokens.push({
-                type: 'plus',
-                value: '+',
-            });
-            currentPosition++;
-        } else if (character === '-') {
-            tokens.push({
-                type: 'minus',
-                value: '-',
-            });
-            currentPosition++;
-        } else if (character === '*') {
-            tokens.push({
-                type: 'star',
-                value: '*',
-            });
-            currentPosition++;
-        } else if (character === '/') {
-            tokens.push({
-                type: 'forward slash',
-                value: '/',
-            });
-            currentPosition++;
-        } else if (character === '%') {
-            tokens.push({
-                type: 'modulo',
-                value: '%',
-            });
-            currentPosition++;
-        } else if (IS_LETTER.test(character)) {
-            let value = '';
-            while (IS_LETTER.test(character)) {
+        switch (character) {
+            case ' ':
+            case '\n': {
+                currentPosition++;
+                break;
+            }
+            case '"': {
+                let value = character;
+                character = input[++currentPosition];
+                while (character !== '"') {
+                    value += character;
+                    character = input[++currentPosition];
+                }
                 value += character;
                 character = input[++currentPosition];
+                tokens.push({
+                    type: 'string',
+                    value,
+                });
+                break;
             }
-            tokens.push({
-                type: 'identifier',
-                value,
-            });
-        } else if (IS_WHITESPACE.test(character)) {
-            currentPosition++;
-        } else if (IS_NUMBER.test(character)) {
-            let value = '';
-            while (IS_NUMBER.test(character)) {
-                value += character;
-                character = input[++currentPosition];
+            case ':': {
+                tokens.push({
+                    type: 'colon',
+                    value: ':',
+                });
+                currentPosition++;
+                break;
             }
-            tokens.push({
-                type: 'number',
-                value,
-            });
-        } else {
-            tokens.push({
-                type: 'unknown',
-                value: character,
-            });
+            case ';': {
+                tokens.push({
+                    type: 'semicolon',
+                    value: ';',
+                });
+                currentPosition++;
+                break;
+            }
+            case '(': {
+                tokens.push({
+                    type: 'left parenthesis',
+                    value: '(',
+                });
+                currentPosition++;
+                break;
+            }
+            case ')': {
+                tokens.push({
+                    type: 'right parenthesis',
+                    value: ')',
+                });
+                currentPosition++;
+                break;
+            }
+            case '+': {
+                tokens.push({
+                    type: 'plus',
+                    value: '+',
+                });
+                currentPosition++;
+                break;
+            }
+            case '-': {
+                tokens.push({
+                    type: 'minus',
+                    value: '-',
+                });
+                currentPosition++;
+                break;
+            }
+            case '*': {
+                tokens.push({
+                    type: 'star',
+                    value: '*',
+                });
+                currentPosition++;
+                break;
+            }
+            case '/': {
+                tokens.push({
+                    type: 'forward slash',
+                    value: '/',
+                });
+                currentPosition++;
+                break;
+            }
+            case '%': {
+                tokens.push({
+                    type: 'modulo',
+                    value: '%',
+                });
+                currentPosition++;
+                break;
+            }
+            case undefined: {
+                tokens.push({
+                    type: 'end of file',
+                    value: '',
+                });
+                currentPosition++;
+                break;
+            }
+            default: {
+                if (IS_LETTER.test(character)) {
+                    let value = '';
+                    while (IS_LETTER.test(character)) {
+                        value += character;
+                        character = input[++currentPosition];
+                    }
+                    tokens.push({
+                        type: 'identifier',
+                        value,
+                    });
+                } else if (IS_NUMBER.test(character)) {
+                    let value = '';
+                    while (IS_NUMBER.test(character)) {
+                        value += character;
+                        character = input[++currentPosition];
+                    }
+                    tokens.push({
+                        type: 'number',
+                        value,
+                    });
+                } else {
+                    tokens.push({
+                        type: 'unknown',
+                        value: character,
+                    });
+                    currentPosition++;
+                }
+            }
         }
     }
     return tokens;

@@ -84,3 +84,14 @@ loop n number: 1 < 100 { // for
 loop n: 1 { // do while
 
 } n < 100
+
+
+// are imports and exports in modules not the same as arguments and returns of
+// functions?
+import { add, sub } from './math.rox';
+export newAdd () {}
+
+myFunction: (num1, num2)    /* imports? */ 
+{ 
+    return num1 - num2;     /* exports? */
+}

@@ -1,5 +1,7 @@
 import {
+    AssignmentExpressionNode,
     BinaryExpressionNode,
+    IdentifierNode,
     Node,
     NumberLiteralNode,
     ProgramNode,
@@ -7,17 +9,23 @@ import {
     StringLiteralNode,
 } from './parse.ts';
 
-export function evaluate(node: Node): any {
-    if (node.type === 'program') {
-        for (const body of (node as ProgramNode).body) {
-            return evaluate(body);
-        }
-    } else if (node.type === 'end of file') {
-        return;
+const identifiers: Record<string, unknown> = {};
+
+export function evaluate(node: ProgramNode): any[] {
+    const results = [];
+    for (const body of node.body) {
+        results.push(compute(body));
+    }
+    return results;
+}
+
+function compute(node: Node): any {
+    if (node.type === 'statement') {
+        return compute((node as StatementNode).statement);
     } else if (node.type === 'binary expression') {
         const expression = node as BinaryExpressionNode;
-        const left = evaluate(expression.left);
-        const right = evaluate(expression.right);
+        const left = compute(expression.left);
+        const right = compute(expression.right);
 
         if (expression.operator === '+') {
             return left + right;
@@ -34,13 +42,21 @@ export function evaluate(node: Node): any {
                 `Unexpected binary operator ${expression.operator}`
             );
         }
-    } else if (node.type === 'number') {
+    } else if (node.type === 'assignment expression') {
+        const expression = node as AssignmentExpressionNode;
+        const left = expression.left;
+        const right = compute(expression.right);
+
+        return (identifiers[left.name] = right);
+    } else if (node.type === 'identifier') {
+        return identifiers[(node as IdentifierNode).name];
+    } else if (node.type === 'number literal') {
         return (node as NumberLiteralNode).value;
-    } else if (node.type === 'statement') {
-        return evaluate((node as StatementNode).statement);
-    } else if (node.type === 'string') {
+    } else if (node.type === 'string literal') {
         return (node as StringLiteralNode).value;
-    } else if (node.type === 'unknown') {
+    } else if (node.type === 'unexpected') {
+        return;
+    } else if (node.type === 'end of file') {
         return;
     } else {
         throw new Error('whomp');
