@@ -86,7 +86,7 @@ export function parse(tokens: SyntaxToken[]) {
                     name: currentToken.value,
                 } as IdentifierNode;
             }
-            case 'colon': {
+            case ':': {
                 const operator = currentToken.value as Operator;
                 const lastNode = stack.pop();
                 return {
@@ -96,11 +96,11 @@ export function parse(tokens: SyntaxToken[]) {
                     right: parseToken(tokens, stack),
                 } as AssignmentExpressionNode;
             }
-            case 'plus':
-            case 'minus':
-            case 'star':
-            case 'forward slash':
-            case 'modulo': {
+            case '+':
+            case '-':
+            case '*':
+            case '/':
+            case '%': {
                 const operator = currentToken.value as Operator;
 
                 // check if previous node was binary
@@ -130,12 +130,12 @@ export function parse(tokens: SyntaxToken[]) {
                     } as BinaryExpressionNode;
                 }
             }
-            case 'semicolon': {
+            case ';': {
                 return stack.pop()!;
             }
-            case 'left parenthesis': {
+            case '(': {
                 let innerToken = tokens[0];
-                while (innerToken.type !== 'right parenthesis') {
+                while (innerToken.type !== ')') {
                     const node = parseToken(tokens, stack);
                     stack.push(node);
                     innerToken = tokens[0];

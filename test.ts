@@ -70,3 +70,25 @@ hope: 10 + num;
         assertEquals(results[3], undefined);
     },
 });
+
+Deno.test({
+    name: 'conditional and line/column test',
+    fn() {
+        const input = `
+small: 1;
+big: 3;
+test;
+if small > 3 {
+    test: small;
+} else {
+    test: big;
+}
+`;
+        const tokens = lex(input);
+        assertEquals(tokens[12].line, 5);
+        assertEquals(tokens[2].column, 8);
+        assertEquals(tokens[10].type, 'if');
+        // const tree = parse(tokens);
+        // const results = evaluate(tree);
+    },
+});

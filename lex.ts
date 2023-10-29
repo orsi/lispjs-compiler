@@ -1,38 +1,95 @@
-type TokenType =
-    | 'left parenthesis'
-    | 'right parenthesis'
-    | 'plus'
-    | 'minus'
-    | 'star'
-    | 'forward slash'
-    | 'modulo'
-    | 'colon'
-    | 'semicolon'
-    | 'double quote'
-    | 'end of file'
-    | 'unknown'
-    | 'number'
-    | 'string'
-    | 'identifier';
+type Symbol =
+    | '('
+    | ')'
+    | '{'
+    | '}'
+    | '+'
+    | '-'
+    | '*'
+    | '/'
+    | '%'
+    | '>'
+    | '<'
+    | ':'
+    | ';'
+    | '"';
+type Literal = 'number' | 'string' | 'identifier';
+const KEYWORDS = ['if', 'else'] as const;
+type Keyword = (typeof KEYWORDS)[number];
+type Something = 'end of file' | 'unknown';
 export type SyntaxToken = {
-    type: TokenType;
+    type: Symbol | Literal | Something | Keyword;
     value: string;
+    column: number;
+    line: number;
 };
 
-const IS_LETTER = /[a-z/]/i;
-const IS_NUMBER = /\d/;
+const isAlpha = (input: string) => /[a-z/]/i.test(input);
+const isNumber = (input: string) => /\d/.test(input);
 
 export function lex(input: string) {
     const tokens: SyntaxToken[] = [];
     let currentPosition = 0;
+    let currentRow = 1;
+    let currentColumn = 1;
     while (currentPosition <= input.length) {
         let character = input[currentPosition];
 
         switch (character) {
-            case ' ':
+            case ' ': {
+                currentPosition++;
+                currentColumn++;
+                continue;
+            }
             case '\n': {
                 currentPosition++;
-                break;
+                currentRow++;
+                currentColumn = 1;
+                continue;
+            }
+            case '(': {
+                tokens.push({
+                    type: '(',
+                    value: character,
+                    column: currentColumn,
+                    line: currentRow,
+                });
+                currentPosition++;
+                currentColumn++;
+                continue;
+            }
+            case ')': {
+                tokens.push({
+                    type: ')',
+                    value: character,
+                    column: currentColumn,
+                    line: currentRow,
+                });
+                currentPosition++;
+                currentColumn++;
+                continue;
+            }
+            case '{': {
+                tokens.push({
+                    type: '{',
+                    value: character,
+                    column: currentColumn,
+                    line: currentRow,
+                });
+                currentPosition++;
+                currentColumn++;
+                continue;
+            }
+            case '}': {
+                tokens.push({
+                    type: '}',
+                    value: character,
+                    column: currentColumn,
+                    line: currentRow,
+                });
+                currentPosition++;
+                currentColumn++;
+                continue;
             }
             case '"': {
                 let value = character;
@@ -46,116 +103,186 @@ export function lex(input: string) {
                 tokens.push({
                     type: 'string',
                     value,
+                    column: currentColumn,
+                    line: currentRow,
                 });
-                break;
+                currentColumn += value.length;
+                continue;
             }
             case ':': {
                 tokens.push({
-                    type: 'colon',
-                    value: ':',
+                    type: ':',
+                    value: character,
+                    column: currentColumn,
+                    line: currentRow,
                 });
                 currentPosition++;
-                break;
+                currentColumn++;
+                continue;
             }
             case ';': {
                 tokens.push({
-                    type: 'semicolon',
-                    value: ';',
+                    type: ';',
+                    value: character,
+                    column: currentColumn,
+                    line: currentRow,
                 });
                 currentPosition++;
-                break;
-            }
-            case '(': {
-                tokens.push({
-                    type: 'left parenthesis',
-                    value: '(',
-                });
-                currentPosition++;
-                break;
-            }
-            case ')': {
-                tokens.push({
-                    type: 'right parenthesis',
-                    value: ')',
-                });
-                currentPosition++;
-                break;
+                currentColumn++;
+                continue;
             }
             case '+': {
                 tokens.push({
-                    type: 'plus',
+                    type: '+',
                     value: '+',
+                    column: currentColumn,
+                    line: currentRow,
                 });
                 currentPosition++;
-                break;
+                currentColumn++;
+                continue;
             }
             case '-': {
                 tokens.push({
-                    type: 'minus',
+                    type: '-',
                     value: '-',
+                    column: currentColumn,
+                    line: currentRow,
                 });
                 currentPosition++;
-                break;
+                currentColumn++;
+                continue;
             }
             case '*': {
                 tokens.push({
-                    type: 'star',
+                    type: '*',
                     value: '*',
+                    column: currentColumn,
+                    line: currentRow,
                 });
                 currentPosition++;
-                break;
+                currentColumn++;
+                continue;
             }
             case '/': {
                 tokens.push({
-                    type: 'forward slash',
-                    value: '/',
+                    type: '/',
+                    value: character,
+                    column: currentColumn,
+                    line: currentRow,
                 });
                 currentPosition++;
-                break;
+                currentColumn++;
+                continue;
             }
             case '%': {
                 tokens.push({
-                    type: 'modulo',
-                    value: '%',
+                    type: '%',
+                    value: character,
+                    column: currentColumn,
+                    line: currentRow,
                 });
                 currentPosition++;
-                break;
+                currentColumn++;
+                continue;
+            }
+            case '<': {
+                tokens.push({
+                    type: '<',
+                    value: character,
+                    column: currentColumn,
+                    line: currentRow,
+                });
+                currentPosition++;
+                currentColumn++;
+                continue;
+            }
+            case '>': {
+                tokens.push({
+                    type: '>',
+                    value: character,
+                    column: currentColumn,
+                    line: currentRow,
+                });
+                currentPosition++;
+                currentColumn++;
+                continue;
             }
             case undefined: {
                 tokens.push({
                     type: 'end of file',
                     value: '',
+                    column: currentColumn,
+                    line: currentRow,
                 });
                 currentPosition++;
-                break;
+                currentColumn++;
+                continue;
             }
             default: {
-                if (IS_LETTER.test(character)) {
+                if (isAlpha(character)) {
                     let value = '';
-                    while (IS_LETTER.test(character)) {
+                    while (isAlpha(character)) {
                         value += character;
                         character = input[++currentPosition];
                     }
-                    tokens.push({
-                        type: 'identifier',
-                        value,
-                    });
-                } else if (IS_NUMBER.test(character)) {
+
+                    switch (value) {
+                        case 'if': {
+                            tokens.push({
+                                type: 'if',
+                                value,
+                                column: currentColumn,
+                                line: currentRow,
+                            });
+                            currentColumn += value.length;
+                            continue;
+                        }
+                        case 'else': {
+                            tokens.push({
+                                type: 'else',
+                                value,
+                                column: currentColumn,
+                                line: currentRow,
+                            });
+                            currentColumn += value.length;
+                            continue;
+                        }
+                        default: {
+                            tokens.push({
+                                type: 'identifier',
+                                value,
+                                column: currentColumn,
+                                line: currentRow,
+                            });
+                            currentColumn += value.length;
+                            continue;
+                        }
+                    }
+                } else if (isNumber(character)) {
                     let value = '';
-                    while (IS_NUMBER.test(character)) {
+                    while (isNumber(character)) {
                         value += character;
                         character = input[++currentPosition];
                     }
                     tokens.push({
                         type: 'number',
                         value,
+                        column: currentColumn,
+                        line: currentRow,
                     });
+                    currentColumn += value.length;
+                    continue;
                 } else {
                     tokens.push({
                         type: 'unknown',
                         value: character,
+                        column: currentColumn,
+                        line: currentRow,
                     });
                     currentPosition++;
+                    currentColumn++;
+                    continue;
                 }
             }
         }
