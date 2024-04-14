@@ -1,27 +1,61 @@
 #include "../src/lex.c"
 #include <stdio.h>
 
+void print_tokens(Token *token) {
+  while (token) {
+    char *type;
+    switch (token->type) {
+    case 0:
+      type = "id\0";
+      break;
+    case 1:
+      type = "key\0";
+      break;
+    case 2:
+      type = "num\0";
+      break;
+    case 3:
+      type = "op\0";
+      break;
+    case 4:
+      type = "str\0";
+      break;
+    }
+    printf("└ token: %s, %.*s\n", type, token->length, token->value);
+    token = token->next;
+  }
+}
+
 int main(int argc, char *argv[]) {
-  printf("Simple expression: \"1 + 2 + 3\"\n");
-  Token *tokens = lex("1 + 2 + 3\0");
+  printf("Simple expression:\t\t1 + 2 + 3\n");
+  print_tokens(lex("1 + 2 + 3"));
 
-  printf("Order of precedence: \"1 + 2 * 10\"\n");
-  tokens = lex("1 + 2 * 10\0");
+  printf("Bigger numbers:\t\t909450945082 + 2392038 - 12390190485\n");
+  print_tokens(lex("909450945082 + 2392038 - 12390190485"));
 
-  printf("Multiple order of precedence: \"(2 * (1 + 5)) / -8 - (3 + 3)\"\n");
-  tokens = lex("(2 * (1 + 5)) / -8 - (3 + 3)\0");
+  printf("Decimal numbers:\t\t.123190024234 + 1231231249.34989283423\n");
+  print_tokens(lex(".123190024234 + 1231231249.34989283423"));
 
-  printf("Bigger numbers: \"909450945082 + 2392038 - 12390190485\"\n");
-  tokens = lex("909450945082 + 2392038 - 12390190485\0");
+  printf("Strings literals:\t\t\"quotes\" \'apostrophes\' `ticks!`\n");
+  print_tokens(lex("\"quotes\" \'apostrophes\' `ticks!`"));
 
-  printf("Decimal numbers: \".123190024234 + 1231231249.34989283423\"\n");
-  tokens = lex(".123190024234 + 1231231249.34989283423\0");
+  printf("No matching quote:\t\t\"quotes \'apostrophes\' `ticks!`\n");
+  print_tokens(lex("\"quotes \'apostrophes\' `ticks!`"));
 
-  printf("Unbalanced parentheses should error: \"2 + (5 * 2\"\n");
-  tokens = lex("2 + (5 * 2\0");
+  printf("String with escapes:\t\t\"Escaped \\\"quote\\\"\" + \"in here\"\n");
+  print_tokens(lex("\"Escaped \\\"quote\\\"\" + \"in here\""));
 
-  printf("Unbalanced parentheses should error: \"(((((4))))\"\n");
-  tokens = lex("(((((4))))\0");
+  printf("Identifiers:\twhat: 4;\n");
+  print_tokens(lex("what: 4;"));
+
+  printf("Lots of identifiers:\twhat do we do here?\n");
+  print_tokens(lex("what do we do here?"));
+
+  printf("Keywords:\tif else hi\n");
+  print_tokens(lex("if else 123 not a keyword"));
+
+  printf("Garbage:\t$23o@ a@#F: -2@#; \\ i??jawoea\"wef:3\"\n");
+  print_tokens(lex("$23o@ a@#F: -2@#; \\ i??jawoea\"wef:3\""));
 
   return 0;
 }
