@@ -1,9 +1,16 @@
+#include <_ctype.h>
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-enum TokenType { Identifier, Keyword, Number, Operator, String };
+enum TokenType {
+  Identifier,
+  Keyword,
+  Number,
+  String,
+  Symbol,
+};
 typedef struct Token Token;
 struct Token {
   enum TokenType type;
@@ -24,12 +31,33 @@ int is_keyword(char *word) {
   return is_match;
 }
 
+int string_starts_with(char *string, char *starts_with) {
+  return strncmp(string, starts_with, strlen(starts_with)) == 0;
+}
+
 Token *lex(char *input) {
   Token *head = malloc(sizeof(Token));
   Token *current = head;
 
   while (*input) {
-    // skip
+    // single-line comments
+    if (string_starts_with(input, "//")) {
+      while (*input != '\n' && *input != '\0') {
+        input++;
+      }
+      continue;
+    }
+
+    // multi-line comments
+    if (string_starts_with(input, "/*")) {
+      while (!string_starts_with(input, "*/") && *input != '\0') {
+        input++;
+      }
+      input += 2; // go past */
+      continue;
+    }
+
+    // skip spaces/new-lines
     if (isspace(*input)) {
       input++;
       continue;
@@ -42,31 +70,35 @@ Token *lex(char *input) {
       int is_error = 0;
       while (*input != matchingQuote) {
         // pass over escape char
-        if (*input == '\\') {
-          input++;
-        } else if (*input == '\0') {
+        if (*input == '\0') {
           printf("error: no matching quote (%c) for: %c%.*s\n", matchingQuote,
                  matchingQuote, (int)(input - start), start);
           is_error = 1;
           break;
         }
+
+        // skips over escape chars
+        if (*input == '\\') {
+          input++;
+        }
+
         input++;
       }
 
       if (is_error) {
         continue;
-      } else {
-        int length = input - start;
-        char *value = malloc(length * sizeof(char));
-        strncpy(value, start, length);
-
-        Token *t = malloc(sizeof(Token));
-        t->type = String;
-        t->value = value;
-        t->length = length;
-        current = current->next = t;
-        input++;
       }
+
+      int length = input - start;
+      char *value = malloc(length * sizeof(char));
+      strncpy(value, start, length);
+
+      Token *t = malloc(sizeof(Token));
+      t->type = String;
+      t->value = value;
+      t->length = length;
+      current = current->next = t;
+      input++;
       continue;
     }
 
@@ -92,7 +124,7 @@ Token *lex(char *input) {
     // symbols
     if (ispunct(*input)) {
       Token *t = malloc(sizeof(Token));
-      t->type = Operator;
+      t->type = Symbol;
       t->value = input;
       t->length = 1;
       current = current->next = t;
@@ -103,7 +135,7 @@ Token *lex(char *input) {
     // identifiers
     if (isalpha(*input)) {
       char *start = input;
-      while (isalpha(*input)) {
+      while (isalnum(*input)) {
         input++;
       }
 
