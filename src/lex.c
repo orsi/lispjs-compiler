@@ -1,23 +1,8 @@
-#include <_ctype.h>
+#include "lex.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
-
-enum TokenType {
-  Identifier,
-  Keyword,
-  Number,
-  String,
-  Symbol,
-};
-typedef struct Token Token;
-struct Token {
-  enum TokenType type;
-  int length;
-  char *value;
-  Token *next;
-};
 
 static char *keywords[] = {"if", "else"};
 int is_keyword(char *word) {
