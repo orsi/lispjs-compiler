@@ -116,7 +116,8 @@ int main(int argc, char *argv[]) {
   // tokens = lex("$23o@ a@#F: -2@#; \\ i??jawoea \"wef:3j\" ");
   // expect("Not sure what to do here?", 1, "");
 
-  Node *nodes = parse(lex("1 + 8.43 - 123.4382 - 230492380 / 20390.12312 + 12"));
+  Node *nodes =
+      parse(lex("1 + 8.43 - 123.4382 - 230492380 / 20390.12312 + 12"));
   expect("Number node", nodes[1].type == BinaryExpression, "Not binary.")
 
       printf("-----------------------\n");

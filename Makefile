@@ -13,11 +13,5 @@ clean:
 	rm -rf bin
 
 debug: bin
-	@echo "\Debugging...\n"
-	clang ./src/debug.c -o ./bin/debug
-	@./bin/debug
-
-test: bin
-	@echo "\nTesting...\n"
-	clang ./src/test.c -o ./bin/test
-	@./bin/test
+	@echo "\nDebugging...\n"
+	clang -g3 /Users/orsi/Code/roxanne/src/test.c -o ./bin/test
