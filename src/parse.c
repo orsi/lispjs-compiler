@@ -16,7 +16,36 @@ struct Node {
   Node *right;
 };
 
-void parse_token(Token *token) {}
+typedef struct {
+  Node *items;
+  size_t length;
+  size_t capacity;
+} NodeArray;
+
+NodeArray *array_create(NodeArray *nodes, size_t initial_capacity) {
+  nodes->items = malloc(initial_capacity * sizeof(Node));
+  if (nodes->items == NULL) {
+    printf("Error malloc node array.");
+    exit(1);
+  }
+  nodes->length = 0;
+  nodes->capacity = initial_capacity;
+  return nodes;
+}
+
+NodeArray *array_push(NodeArray *nodes, Node *item) {
+  if (nodes->length >= nodes->capacity) {
+    nodes->capacity *= 2;
+    nodes->items = realloc(nodes->items, nodes->capacity * sizeof(Node));
+    if (nodes->items == NULL) {
+      printf("Error realloc node array.");
+      exit(1);
+    }
+  }
+  nodes->items[nodes->length] = *item;
+  nodes->length += 1;
+  return nodes;
+}
 
 // 1 + 2 * 3
 //
@@ -27,11 +56,12 @@ void parse_token(Token *token) {}
 //       / \
 //      2   3
 //
-Node *parse(Token *token_start) {
+NodeArray *parse(Token *token_start, NodeArray *nodes) {
   Token *current_token = token_start;
   int length = 2;
   int i = 0;
-  Node *nodes = malloc(length * sizeof(Node));
+
+  array_create(nodes, 50);
 
   while (current_token) {
     Node *node = malloc(sizeof(Node));
@@ -50,18 +80,7 @@ Node *parse(Token *token_start) {
         node->int_value = atoi(current_token->value);
       }
 
-      // push
-      if (i < length) {
-        printf("arr normal, i: %d length: %d\n", i, length);
-        nodes[i] = *node;
-      } else {
-        length = length * 2;
-        printf("arr expand,  i: %d length: %d\n", i, length);
-        Node *new_nodes = malloc(length * sizeof(Node));
-        memcpy(new_nodes, nodes, length);
-        nodes[i] = *node;
-      }
-
+      array_push(nodes, node);
       current_token = current_token->next;
       i++;
       continue;
@@ -73,18 +92,7 @@ Node *parse(Token *token_start) {
       node->type = BinaryExpression;
       node->symbol_value = symbol;
 
-      // push
-      if (i < length) {
-        printf("arr normal, i: %d length: %d\n", i, length);
-        nodes[i] = *node;
-      } else {
-        length = length * 2;
-        printf("arr expand,  i: %d length: %d\n", i, length);
-        Node *new_nodes = malloc(length * sizeof(Node));
-        memcpy(new_nodes, nodes, length);
-        nodes = new_nodes;
-        nodes[i] = *node;
-      }
+      array_push(nodes, node);
 
       current_token = current_token->next;
       i++;

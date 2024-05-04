@@ -16,8 +16,7 @@
     if (strlen(error_message) > 0) {                                           \
       printf("\t%.*s\n", (int)strlen(error_message), error_message);           \
     }                                                                          \
-  }                                                                            \
-  print_nodes(nodes, 11);
+  }
 
 static int TESTS_TOTAL = 0;
 static int TESTS_PASSED = 0;
@@ -50,10 +49,10 @@ void print_tokens(Token *token) {
 #endif
 }
 
-void print_nodes(Node *nodes, int length) {
+void print_nodes(NodeArray *nodes) {
 #if DEBUG_PRINT == 1
-  for (int i = 0; i < length; i++) {
-    Node node = nodes[i];
+  for (int i = 0; i < nodes->length; i++) {
+    Node node = nodes->items[i];
     char *type;
     switch (node.type) {
     case BinaryExpression:
@@ -116,11 +115,14 @@ int main(int argc, char *argv[]) {
   // tokens = lex("$23o@ a@#F: -2@#; \\ i??jawoea \"wef:3j\" ");
   // expect("Not sure what to do here?", 1, "");
 
-  Node *nodes =
-      parse(lex("1 + 8.43 - 123.4382 - 230492380 / 20390.12312 + 12"));
-  expect("Number node", nodes[1].type == BinaryExpression, "Not binary.")
+  NodeArray nodes;
+  nodes =
+      *parse(lex("1 + 8.43 - 123.4382 - 230492380 / 20390.12312 + 12 - 1123.123 + 39 - 31 + 13 - 1 + 8.43 - 123.4382 - 230492380 / 20390.12312 + 12 - 1123.123 + 39 - 31 + 13 + 1 + 8.43 - 123.4382 - 230492380 / 20390.12312 + 12 - 1123.123 + 39 - 31 + 13"), &nodes);
+  expect("Number node", nodes.items[1].type == BinaryExpression, "Not binary.");
+  print_nodes(&nodes);
+  free(nodes.items);
 
-      printf("-----------------------\n");
+  printf("-----------------------\n");
   printf("Total tests: %d (\e[32m%d\e[0m passed,  \e[31m%d\e[0m failed)\n\n",
          TESTS_TOTAL, TESTS_PASSED, TESTS_FAILED);
   return 0;
