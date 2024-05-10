@@ -22,60 +22,6 @@ static int TESTS_TOTAL = 0;
 static int TESTS_PASSED = 0;
 static int TESTS_FAILED = 0;
 
-void print_tokens(Token *token) {
-#if DEBUG_PRINT == 1
-  while (token) {
-    char *type;
-    switch (token->type) {
-    case Identifier:
-      type = "id\0";
-      break;
-    case Keyword:
-      type = "key\0";
-      break;
-    case Number:
-      type = "num\0";
-      break;
-    case String:
-      type = "str\0";
-      break;
-    case Symbol:
-      type = "sym\0";
-      break;
-    }
-    printf("└ token: %s, %.*s\n", type, token->length, token->value);
-    token = token->next;
-  }
-#endif
-}
-
-void print_nodes(NodeArray *nodes) {
-#if DEBUG_PRINT == 1
-  for (int i = 0; i < nodes->length; i++) {
-    Node node = nodes->items[i];
-    char *type;
-    switch (node.type) {
-    case BinaryExpression:
-      type = "bin\0";
-      printf("└ node: %s, %c\n", type, node.symbol_value);
-      break;
-    case DoubleNumber:
-      type = "dbl\0";
-      printf("└ node: %s, %f\n", type, node.double_value);
-      break;
-    case IntNumber:
-      type = "int\0";
-      printf("└ node: %s, %d\n", type, node.int_value);
-      break;
-    case Root:
-      type = "root\0";
-      printf("└ node: root\n");
-      break;
-    }
-  }
-#endif
-}
-
 int main(int argc, char *argv[]) {
   // Token *tokens = lex("// don't parse me!\n// or me!");
   // expect("Comments //", tokens == NULL, "So what.");

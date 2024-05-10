@@ -20,6 +20,31 @@ int string_starts_with(char *string, char *starts_with) {
   return strncmp(string, starts_with, strlen(starts_with)) == 0;
 }
 
+void print_tokens(Token *token) {
+  while (token) {
+    char *type;
+    switch (token->type) {
+    case Identifier:
+      type = "id\0";
+      break;
+    case Keyword:
+      type = "key\0";
+      break;
+    case Number:
+      type = "num\0";
+      break;
+    case String:
+      type = "str\0";
+      break;
+    case Symbol:
+      type = "sym\0";
+      break;
+    }
+    printf("└ token: %s, %.*s\n", type, token->length, token->value);
+    token = token->next;
+  }
+}
+
 Token *lex(char *input) {
   Token *head = malloc(sizeof(Token));
   Token *current = head;
