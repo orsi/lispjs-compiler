@@ -2,6 +2,7 @@
 #include "./parse.c"
 #include <assert.h>
 #include <stdio.h>
+#include <string.h>
 
 #define DEBUG_PRINT 1
 
@@ -61,12 +62,12 @@ int main(int argc, char *argv[]) {
   // tokens = lex("$23o@ a@#F: -2@#; \\ i??jawoea \"wef:3j\" ");
   // expect("Not sure what to do here?", 1, "");
 
-  NodeArray nodes;
-  nodes =
-      *parse(lex("1 + 8.43 - 123.4382 - 230492380 / 20390.12312 + 12 - 1123.123 + 39 - 31 + 13 - 1 + 8.43 - 123.4382 - 230492380 / 20390.12312 + 12 - 1123.123 + 39 - 31 + 13 + 1 + 8.43 - 123.4382 - 230492380 / 20390.12312 + 12 - 1123.123 + 39 - 31 + 13"), &nodes);
-  expect("Number node", nodes.items[1].type == BinaryExpression, "Not binary.");
-  print_nodes(&nodes);
-  free(nodes.items);
+  char *node_str = "1 + 2 * 3 + 4 + 5 * 6 * 7 + 8";
+  Node *root_node = parse(lex(node_str));
+  int level = 0;
+  expect("Parse: 1 + 2 * 3 + 4 + 5 * 6 * 7 + 8",
+         root_node->left->left->left->right->left->int_value == 2, "Not 2.");
+  print_node_tree(root_node, level, "");
 
   printf("-----------------------\n");
   printf("Total tests: %d (\e[32m%d\e[0m passed,  \e[31m%d\e[0m failed)\n\n",

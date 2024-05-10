@@ -3,7 +3,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-enum NodeType { BinaryExpression, DoubleNumber, IntNumber, Root };
+enum NodeType { Null, BinaryExpression, DoubleNumber, IntNumber, Root };
 typedef struct Node Node;
 struct Node {
   enum NodeType type;
@@ -101,52 +101,77 @@ void print_node_tree(Node *node, int level, char *prefix) {
 //       / \
 //      2   3
 //
-NodeArray *parse(Token *token_start, NodeArray *nodes) {
-  Token *current_token = token_start;
-  int length = 2;
-  int i = 0;
 
-  array_create(nodes, 50);
+int get_operator_precedence(char *operator) {
+  if (strcmp(operator, "*") == 0 || strcmp(operator, "/") == 0) {
+    return 1;
+  } else {
+    return 0;
+  }
+}
 
-  while (current_token) {
-    Node *node = malloc(sizeof(Node));
+Node *parse_node(Token **tokens, NodeArray *node_stack) {
+  Token current_token = **tokens;
 
-    // numbers
-    if (current_token->type == Number) {
-      if (strchr(current_token->value, '.')) {
-        // double
-        printf("double: %.*s\n", current_token->length, current_token->value);
-        node->type = DoubleNumber;
-        node->double_value = atof(current_token->value);
-      } else {
-        // int
-        printf("int: %.*s\n", current_token->length, current_token->value);
-        node->type = IntNumber;
-        node->int_value = atoi(current_token->value);
-      }
-
-      array_push(nodes, node);
-      current_token = current_token->next;
-      i++;
-      continue;
-    }
-
-    if (current_token->type == Symbol) {
-      char symbol = current_token->value[0];
-      printf("%c\n", symbol);
-      node->type = BinaryExpression;
-      node->symbol_value = symbol;
-
-      array_push(nodes, node);
-
-      current_token = current_token->next;
-      i++;
-      continue;
-    }
-
-    // error!
-    current_token = current_token->next;
+  if (current_token.type == Number && strchr(current_token.value, '.')) {
+    // double
+    Node *node = create_node();
+    node->type = DoubleNumber;
+    node->double_value = atof(current_token.value);
+    *tokens = current_token.next;
+    return node;
   }
 
-  return nodes;
+  if (current_token.type == Number) {
+    // int
+    Node *node = create_node();
+    node->type = IntNumber;
+    node->int_value = atoi(current_token.value);
+    *tokens = current_token.next;
+    return node;
+  }
+
+  if (current_token.type == Symbol) {
+    char symbol = current_token.value[0];
+    Node *node = create_node();
+    node->type = BinaryExpression;
+    node->symbol_value = symbol;
+
+    Node *last_node = pop_node_array(node_stack);
+    if (last_node != NULL && last_node->type == BinaryExpression &&
+        get_operator_precedence(&last_node->symbol_value) <
+            get_operator_precedence(&node->symbol_value)) {
+      // when we have multiple binary expressions in a row, we
+      // need to compare their operator precedence, and if the current
+      // binary expression has greater precendence, we have to steal
+      // the right operand from the lesser precedence, and replace
+      // it with this binary expression
+      node->left = last_node->right;
+      last_node->right = node;
+      *tokens = current_token.next;
+      node->right = parse_node(tokens, node_stack);
+      return last_node;
+    } else {
+      node->left = last_node;
+      *tokens = current_token.next;
+      node->right = parse_node(tokens, node_stack);
+      return node;
+    }
+  }
+
+  return NULL;
+}
+
+Node *parse(Token *tokens) {
+  Node **root;
+  NodeArray stack;
+  create_node_array(&stack);
+
+  while (tokens) {
+    Node *node = parse_node(&tokens, &stack);
+    push_node_array(&stack, node);
+    *root = node;
+  }
+
+  return *root;
 }
