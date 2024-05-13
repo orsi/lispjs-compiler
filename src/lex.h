@@ -2,11 +2,11 @@
 #define LEX_H
 
 enum TokenType {
-  Identifier,
-  Keyword,
-  Number,
-  String,
-  Symbol,
+  TOKEN_IDENTIFIER,
+  TOKEN_KEYWORD,
+  TOKEN_NUMBER,
+  TOKEN_STRING,
+  TOKEN_SYMBOL,
 };
 typedef struct Token Token;
 struct Token {
@@ -15,4 +15,10 @@ struct Token {
   char *value;
   Token *next;
 };
+
+int is_keyword(char *word);
+int string_starts_with(char *string, char *starts_with);
+void print_tokens(Token *token);
+Token *lex(char *input);
+
 #endif

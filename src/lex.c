@@ -1,10 +1,11 @@
-#include "lex.h"
+#include "./lex.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
 static char *keywords[] = {"if", "else"};
+
 int is_keyword(char *word) {
   int is_match = 0;
   for (int i = 0; i < sizeof(keywords) / sizeof(*keywords); i++) {
@@ -24,19 +25,19 @@ void print_tokens(Token *token) {
   while (token) {
     char *type;
     switch (token->type) {
-    case Identifier:
+    case TOKEN_IDENTIFIER:
       type = "id\0";
       break;
-    case Keyword:
+    case TOKEN_KEYWORD:
       type = "key\0";
       break;
-    case Number:
+    case TOKEN_NUMBER:
       type = "num\0";
       break;
-    case String:
+    case TOKEN_STRING:
       type = "str\0";
       break;
-    case Symbol:
+    case TOKEN_SYMBOL:
       type = "sym\0";
       break;
     }
@@ -104,7 +105,7 @@ Token *lex(char *input) {
       strncpy(value, start, length);
 
       Token *t = malloc(sizeof(Token));
-      t->type = String;
+      t->type = TOKEN_STRING;
       t->value = value;
       t->length = length;
       current = current->next = t;
@@ -124,7 +125,7 @@ Token *lex(char *input) {
       strncpy(value, start, length);
 
       Token *t = malloc(sizeof(Token));
-      t->type = Number;
+      t->type = TOKEN_NUMBER;
       t->value = value;
       t->length = length;
       current = current->next = t;
@@ -134,7 +135,7 @@ Token *lex(char *input) {
     // symbols
     if (ispunct(*input)) {
       Token *t = malloc(sizeof(Token));
-      t->type = Symbol;
+      t->type = TOKEN_SYMBOL;
       t->value = input;
       t->length = 1;
       current = current->next = t;
@@ -155,12 +156,12 @@ Token *lex(char *input) {
 
       Token *t = malloc(sizeof(Token));
       if (is_keyword(value)) {
-        t->type = Keyword;
+        t->type = TOKEN_KEYWORD;
         t->value = value;
         t->length = length;
         current = current->next = t;
       } else {
-        t->type = Identifier;
+        t->type = TOKEN_IDENTIFIER;
         t->value = value;
         t->length = length;
         current = current->next = t;
