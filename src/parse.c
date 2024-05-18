@@ -2,6 +2,56 @@
 #include <stdio.h>
 #include <string.h>
 
+char *get_node_string(Node *node) {
+  char string[128];
+  int length;
+  switch (node->type) {
+  case NODE_EMPTY: {
+    length = sprintf(string, "empty");
+    break;
+  }
+  case (NODE_EXPRESSION_BINARY): {
+    length = sprintf(string, "bin: %c", node->expression_symbol);
+    break;
+  }
+  case (NODE_VALUE_VARIABLE): {
+    length = sprintf(string, "var: %.*s", node->variable_name.length,
+                     node->variable_name.value);
+    break;
+  }
+  case (NODE_VALUE_DOUBLE): {
+    length = sprintf(string, "dbl: %f", node->value_double);
+    break;
+  }
+  case (NODE_VALUE_INTEGER): {
+    length = sprintf(string, "int: %d", node->value_int);
+    break;
+  }
+  case (NODE_VALUE_STRING): {
+    length = sprintf(string, "str: %.*s", node->value_string.length,
+                     node->value_string.value);
+    break;
+  }
+  }
+
+  char *node_string = malloc(length);
+  memcpy(node_string, string, length);
+  return node_string;
+}
+
+void print_node_tree(Node *node, int level, char *prefix) {
+  int indent = level * 2;
+  printf("%*s└ %s%s\n", indent, "", prefix, get_node_string(node));
+
+  if (node->left != NULL) {
+    print_node_tree(node->left, level + 1, "l: ");
+  }
+
+  if (node->right != NULL) {
+    print_node_tree(node->right, level + 1, "r: ");
+  }
+}
+
 Node *create_node() {
   Node *node = malloc(sizeof(Node));
   if (node == NULL) {
@@ -48,27 +98,6 @@ Node *pop_node_array(NodeArray *node_array) {
   return node_array->items[node_array->length];
 }
 
-void print_node_tree(Node *node, int level, char *prefix) {
-  int indent = level * 2;
-  if (node->type == NODE_BINARY_EXPRESSION) {
-    printf("%*s└%sbin: %c\n", indent, "", prefix, node->symbol_value);
-  }
-  if (node->type == NODE_DOUBLE) {
-    printf("%*s└%sdbl: %f\n", indent, "", prefix, node->double_value);
-  }
-  if (node->type == NODE_INTEGER) {
-    printf("%*s└%sint: %d\n", indent, "", prefix, node->int_value);
-  }
-
-  if (node->left != NULL) {
-    print_node_tree(node->left, level + 1, " l: ");
-  }
-
-  if (node->right != NULL) {
-    print_node_tree(node->right, level + 1, " r: ");
-  }
-}
-
 // 1 + 2 * 3
 //
 // should look like this at some point in the future :P
@@ -93,16 +122,32 @@ Node *parse_node(Token **tokens, NodeArray *node_stack) {
 
   if (current_token.type == TOKEN_NUMBER && strchr(current_token.value, '.')) {
     // double
-    node->type = NODE_DOUBLE;
-    node->double_value = atof(current_token.value);
+    node->type = NODE_VALUE_DOUBLE;
+    node->value_double = atof(current_token.value);
     *tokens = current_token.next;
     return node;
   }
 
   if (current_token.type == TOKEN_NUMBER) {
     // int
-    node->type = NODE_INTEGER;
-    node->int_value = atoi(current_token.value);
+    node->type = NODE_VALUE_INTEGER;
+    node->value_int = atoi(current_token.value);
+    *tokens = current_token.next;
+    return node;
+  }
+
+  if (current_token.type == TOKEN_STRING) {
+    node->type = NODE_VALUE_STRING;
+    node->value_string = (SimpleString){.length = current_token.length,
+                                            .value = current_token.value};
+    *tokens = current_token.next;
+    return node;
+  }
+
+  if (current_token.type == TOKEN_IDENTIFIER) {
+    node->type = NODE_VALUE_VARIABLE;
+    node->variable_name = (SimpleString){.length = current_token.length,
+                                             .value = current_token.value};
     *tokens = current_token.next;
     return node;
   }
@@ -123,24 +168,24 @@ Node *parse_node(Token **tokens, NodeArray *node_stack) {
     }
 
     Node *last_node = pop_node_array(node_stack);
-    if (last_node != NULL && last_node->type == NODE_BINARY_EXPRESSION &&
-        get_operator_precedence(last_node->symbol_value) <
+    if (last_node != NULL && last_node->type == NODE_EXPRESSION_BINARY &&
+        get_operator_precedence(last_node->expression_symbol) <
             get_operator_precedence(symbol)) {
       // when we have multiple binary expressions in a row, we
       // need to compare their operator precedence, and if the current
       // binary expression has greater precendence, we have to steal
       // the right operand from the lesser precedence, and replace
       // it with this binary expression
-      node->type = NODE_BINARY_EXPRESSION;
-      node->symbol_value = symbol;
+      node->type = NODE_EXPRESSION_BINARY;
+      node->expression_symbol = symbol;
       node->left = last_node->right;
       last_node->right = node;
       *tokens = current_token.next;
       node->right = parse_node(tokens, node_stack);
       return last_node;
     } else {
-      node->type = NODE_BINARY_EXPRESSION;
-      node->symbol_value = symbol;
+      node->type = NODE_EXPRESSION_BINARY;
+      node->expression_symbol = symbol;
       node->left = last_node;
       *tokens = current_token.next;
       node->right = parse_node(tokens, node_stack);

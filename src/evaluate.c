@@ -1,21 +1,37 @@
 #include "./roxanne.h"
 #include <math.h>
 #include <stdio.h>
+#include <string.h>
 
-void print_result(Result *result) {
-  if (result->type == RESULT_NONE) {
-    printf("No result\n");
-    return;
+char *get_result_string(Result *result) {
+  char string[128];
+  int length;
+  switch (result->type) {
+  case (RESULT_NONE): {
+    length = sprintf(string, "none");
+    break;
   }
-  if (result->type == RESULT_INTEGER) {
-    printf("%d\n", result->int_value);
-    return;
+  case (RESULT_INTEGER): {
+    length = sprintf(string, "int: %d", result->value_int);
+    break;
   }
-  if (result->type == RESULT_DOUBLE) {
-    printf("%f\n", result->double_value);
-    return;
+  case (RESULT_DOUBLE): {
+    length = sprintf(string, "double: %f", result->value_double);
+    break;
   }
+  case RESULT_STRING: {
+    length = sprintf(string, "str: %.*s", result->value_string.length,
+                     result->value_string.value);
+    break;
+  }
+  }
+
+  char *result_string = malloc(length);
+  memcpy(result_string, string, length);
+  return result_string;
 }
+
+void print_result(Result *result) { printf("%s", get_result_string(result)); }
 
 Result *evaluate_binary_expression(Result *result, char symbol, Node *left_node,
                                    Node *right_node) {
@@ -23,129 +39,129 @@ Result *evaluate_binary_expression(Result *result, char symbol, Node *left_node,
   Result *right_result = malloc(sizeof(Result));
 
   // get left and right values
-  if (left_node->type == NODE_BINARY_EXPRESSION) {
-    evaluate_binary_expression(left_result, left_node->symbol_value,
+  if (left_node->type == NODE_EXPRESSION_BINARY) {
+    evaluate_binary_expression(left_result, left_node->expression_symbol,
                                left_node->left, left_node->right);
-  } else if (left_node->type == NODE_DOUBLE) {
+  } else if (left_node->type == NODE_VALUE_DOUBLE) {
     left_result->type = RESULT_DOUBLE;
-    left_result->double_value = left_node->double_value;
-  } else if (left_node->type == NODE_INTEGER) {
+    left_result->value_double = left_node->value_double;
+  } else if (left_node->type == NODE_VALUE_INTEGER) {
     left_result->type = RESULT_INTEGER;
-    left_result->int_value = left_node->int_value;
+    left_result->value_int = left_node->value_int;
   }
 
-  if (right_node->type == NODE_BINARY_EXPRESSION) {
-    evaluate_binary_expression(right_result, right_node->symbol_value,
+  if (right_node->type == NODE_EXPRESSION_BINARY) {
+    evaluate_binary_expression(right_result, right_node->expression_symbol,
                                right_node->left, right_node->right);
-  } else if (right_node->type == NODE_DOUBLE) {
+  } else if (right_node->type == NODE_VALUE_DOUBLE) {
     right_result->type = RESULT_DOUBLE;
-    right_result->double_value = right_node->double_value;
-  } else if (right_node->type == NODE_INTEGER) {
+    right_result->value_double = right_node->value_double;
+  } else if (right_node->type == NODE_VALUE_INTEGER) {
     right_result->type = RESULT_INTEGER;
-    right_result->double_value = right_node->double_value;
+    right_result->value_double = right_node->value_double;
   }
 
   if (symbol == '+') {
     if (left_result->type == RESULT_INTEGER &&
         right_result->type == RESULT_INTEGER) {
       result->type = RESULT_INTEGER;
-      result->int_value = left_result->int_value + right_result->int_value;
+      result->value_int = left_result->value_int + right_result->value_int;
     } else if (left_result->type == RESULT_INTEGER &&
                right_result->type == RESULT_DOUBLE) {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          left_result->int_value + right_result->double_value;
+      result->value_double =
+          left_result->value_int + right_result->value_double;
     } else if (left_result->type == RESULT_DOUBLE &&
                right_result->type == RESULT_INTEGER) {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          left_result->double_value + right_result->int_value;
+      result->value_double =
+          left_result->value_double + right_result->value_int;
     } else {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          left_result->double_value + right_result->double_value;
+      result->value_double =
+          left_result->value_double + right_result->value_double;
     }
   } else if (symbol == '-') {
     if (left_result->type == RESULT_INTEGER &&
         right_result->type == RESULT_INTEGER) {
       result->type = RESULT_INTEGER;
-      result->int_value = left_result->int_value - right_result->int_value;
+      result->value_int = left_result->value_int - right_result->value_int;
     } else if (left_result->type == RESULT_INTEGER &&
                right_result->type == RESULT_DOUBLE) {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          left_result->int_value - right_result->double_value;
+      result->value_double =
+          left_result->value_int - right_result->value_double;
     } else if (left_result->type == RESULT_DOUBLE &&
                right_result->type == RESULT_INTEGER) {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          left_result->double_value - right_result->int_value;
+      result->value_double =
+          left_result->value_double - right_result->value_int;
     } else {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          left_result->double_value - right_result->double_value;
+      result->value_double =
+          left_result->value_double - right_result->value_double;
     }
   } else if (symbol == '*') {
     if (left_result->type == RESULT_INTEGER &&
         right_result->type == RESULT_INTEGER) {
       result->type = RESULT_INTEGER;
-      result->int_value = left_result->int_value * right_result->int_value;
+      result->value_int = left_result->value_int * right_result->value_int;
     } else if (left_result->type == RESULT_INTEGER &&
                right_result->type == RESULT_DOUBLE) {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          left_result->int_value * right_result->double_value;
+      result->value_double =
+          left_result->value_int * right_result->value_double;
     } else if (left_result->type == RESULT_DOUBLE &&
                right_result->type == RESULT_INTEGER) {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          left_result->double_value * right_result->int_value;
+      result->value_double =
+          left_result->value_double * right_result->value_int;
     } else {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          left_result->double_value * right_result->double_value;
+      result->value_double =
+          left_result->value_double * right_result->value_double;
     }
   } else if (symbol == '/') {
     if (left_result->type == RESULT_INTEGER &&
         right_result->type == RESULT_INTEGER) {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          (double)left_result->int_value / (double)right_result->int_value;
+      result->value_double =
+          (double)left_result->value_int / (double)right_result->value_int;
     } else if (left_result->type == RESULT_INTEGER &&
                right_result->type == RESULT_DOUBLE) {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          (double)left_result->int_value / right_result->double_value;
+      result->value_double =
+          (double)left_result->value_int / right_result->value_double;
     } else if (left_result->type == RESULT_DOUBLE &&
                right_result->type == RESULT_INTEGER) {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          left_result->double_value / (double)right_result->int_value;
+      result->value_double =
+          left_result->value_double / (double)right_result->value_int;
     } else {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          left_result->double_value / right_result->double_value;
+      result->value_double =
+          left_result->value_double / right_result->value_double;
     }
   } else /* modulo */ {
     if (left_result->type == RESULT_INTEGER &&
         right_result->type == RESULT_INTEGER) {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          fmod(left_result->int_value, right_result->int_value);
+      result->value_double =
+          fmod(left_result->value_int, right_result->value_int);
     } else if (left_result->type == RESULT_INTEGER &&
                right_result->type == RESULT_DOUBLE) {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          fmod(left_result->int_value, right_result->double_value);
+      result->value_double =
+          fmod(left_result->value_int, right_result->value_double);
     } else if (left_result->type == RESULT_DOUBLE &&
                right_result->type == RESULT_INTEGER) {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          fmod(left_result->double_value, right_result->int_value);
+      result->value_double =
+          fmod(left_result->value_double, right_result->value_int);
     } else {
       result->type = RESULT_DOUBLE;
-      result->double_value =
-          fmod(left_result->double_value, right_result->double_value);
+      result->value_double =
+          fmod(left_result->value_double, right_result->value_double);
     }
   }
 
@@ -155,17 +171,32 @@ Result *evaluate_binary_expression(Result *result, char symbol, Node *left_node,
 Result *evaluate_node(Node *node) {
   Result *result = malloc(sizeof(Result));
 
-  if (node->type == NODE_BINARY_EXPRESSION) {
-    evaluate_binary_expression(result, node->symbol_value, node->left,
+  switch (node->type) {
+  case (NODE_EXPRESSION_BINARY): {
+    evaluate_binary_expression(result, node->expression_symbol, node->left,
                                node->right);
-  } else if (node->type == NODE_DOUBLE) {
+    break;
+  }
+  case (NODE_VALUE_DOUBLE): {
     result->type = RESULT_DOUBLE;
-    result->double_value = node->double_value;
-  } else if (node->type == NODE_INTEGER) {
+    result->value_double = node->value_double;
+    break;
+  }
+  case (NODE_VALUE_INTEGER): {
     result->type = RESULT_INTEGER;
-    result->int_value = node->int_value;
-  } else {
+    result->value_int = node->value_int;
+    break;
+  }
+  case NODE_VALUE_STRING: {
+    result->type = RESULT_STRING;
+    result->value_string = node->value_string;
+  }
+  case NODE_VALUE_VARIABLE:
+  case NODE_EMPTY:
+  default: {
     result->type = RESULT_NONE;
+    break;
+  }
   }
 
   return result;

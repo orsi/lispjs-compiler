@@ -25,6 +25,19 @@ void _expect(bool expression, char *description, int description_length) {
   }
 }
 
+int compare_lex_to_string(char *statement, char *string) {
+  return strcmp(get_token_string(lex(statement)), string) == 0;
+}
+
+int compare_parse_to_string(char *statement, char *string) {
+  return strcmp(get_node_string(parse(lex(statement))), string) == 0;
+}
+
+int compare_eval_to_string(char *statement, char *string) {
+  return strcmp(get_result_string(evaluate_node(parse(lex(statement)))),
+                string) == 0;
+}
+
 void print_test_results() {
   printf("\n-- Test Results --\n");
   printf("Total:\t%d\n", TESTS_TOTAL);
@@ -33,64 +46,31 @@ void print_test_results() {
 }
 
 int main(void) {
-  expect(lex("// don't parse me!\n// or me!") == NULL);
-  expect(lex("/* don't parse me!\nor me!*/") == NULL);
-  expect(lex("/* don't parse me!\nor me!*/\nhi: 123.123 /* yup */") != NULL);
-  expect(lex("1 + 2 + 3")->type == TOKEN_NUMBER);
+  // lexer tests
+  expect(compare_lex_to_string("// don't parse me!\n// or me!", "null"));
+  expect(compare_lex_to_string("hi", "id: hi"));
+  expect(compare_lex_to_string("if", "key: if"));
+  expect(compare_lex_to_string("123.123", "num: 123.123"));
+  expect(compare_lex_to_string("\"hi\"", "str: hi"));
+  expect(compare_lex_to_string(":", "sym: :"));
 
-  //   tokens =
-  //       lex("909450945082 + .123190024234 - 1231231249.34989283423 +
-  //       00123.123");
-  //   expect(1);
+  // parse tests
+  expect(compare_parse_to_string("1", "int: 1"));
+  expect(compare_parse_to_string("\"hi\"", "str: hi"));
+  expect(compare_parse_to_string("129.012", "dbl: 129.012000"));
+  expect(compare_parse_to_string("11 + 12.4", "bin: +"));
+  expect(compare_parse_to_string("test", "var: test"));
 
-  //   tokens = lex("\"quotes\" \'apostrophes\' `ticks!`");
-  //   expect(1);
-
-  //   tokens = lex("\"quotes \'apostrophes\' `ticks!`");
-  //   expect(1);
-
-  //   tokens = lex("\"Escaped \\\"quote\\\"\" + \"in here\"");
-  //   expect(1);
-
-  //   tokens = lex("what: 4; hi: 2;");
-  //   expect(1);
-
-  //   tokens = lex("if else 123 not a keyword");
-  //   expect(1);
-
-  //   tokens = lex("ifnt elsent 123 not a keyword");
-  //   expect(1);
-
-  //   tokens = lex("$23o@ a@#F: -2@#; \\ i??jawoea \"wef:3j\" ");
-  //   expect(1);
-
-  Result *result = evaluate_node(parse(lex("1 + 2 * 3 + 4 + 5 * 6 * 7 + 8")));
-  expect(result->int_value == 229);
-
-  result = evaluate_node(parse(lex("1 + 2")));
-  expect(result->type == RESULT_INTEGER && result->int_value == 3);
-
-  result = evaluate_node(parse(lex("2 * 3")));
-  expect(result->type == RESULT_INTEGER && result->int_value == 6);
-
-  result = evaluate_node(parse(lex("250.0 * 1.5")));
-  expect(result->type == RESULT_DOUBLE && result->double_value == 375.000000);
-
-  result =
-      evaluate_node(parse(lex("12938112.01224234233123 / 234.5122342342343")));
-  expect(result->type == RESULT_DOUBLE);
-  expect(fabs(result->double_value - 55170.307231) < 0.000001);
-
-  result = evaluate_node(parse(lex("1 / 2 + 3 - 4 % 5")));
-  expect(result->type == RESULT_DOUBLE);
-  expect(fabs(result->double_value - -0.500000) < 0.000001);
-
-  result = evaluate_node(parse(lex("2 * (3 + 4)")));
-  expect(result->type == RESULT_INTEGER);
-  expect(result->int_value == 14);
-
-  result = evaluate_node(parse(lex(read_filepath("./src/mock/test.rox"))));
-  expect(result->double_value == 2.5);
+  // eval tests
+  expect(compare_eval_to_string("1 + 2 * 3 + 4 + 5 * 6 * 7 + 8", "int: 229"));
+  expect(compare_eval_to_string("2 * (3 + 4)", "int: 14"));
+  expect(compare_eval_to_string("250.0 * 1.5", "double: 375.000000"));
+  expect(compare_eval_to_string("12938112.01224234233123 / 234.5122342342343",
+                                "double: 55170.307231"));
+  expect(compare_eval_to_string("1 / 2 + 3 - 4 % 5", "double: -0.500000"));
+  expect(compare_eval_to_string("hi: 1", "none"));
+  expect(compare_eval_to_string(read_filepath("./src/mock/test.rox"),
+                                "double: 2.500000"));
 
   print_test_results();
 }

@@ -6,6 +6,41 @@
 
 static char *keywords[] = {"if", "else"};
 
+char *get_token_string(Token *token) {
+  char string[128];
+  int length;
+  switch (token->type) {
+  case TOKEN_NULL:
+    length = sprintf(string, "null");
+    break;
+  case TOKEN_IDENTIFIER:
+    length = sprintf(string, "id: %.*s", token->length, token->value);
+    break;
+  case TOKEN_KEYWORD:
+    length = sprintf(string, "key: %.*s", token->length, token->value);
+    break;
+  case TOKEN_NUMBER:
+    length = sprintf(string, "num: %.*s", token->length, token->value);
+    break;
+  case TOKEN_STRING:
+    length = sprintf(string, "str: %.*s", token->length, token->value);
+    break;
+  case TOKEN_SYMBOL:
+    length = sprintf(string, "sym: %.*s", token->length, token->value);
+    break;
+  }
+  char *token_string = malloc(length);
+  memcpy(token_string, string, length);
+  return token_string;
+}
+
+void print_tokens(Token *token) {
+  while (token) {
+    printf("└ %s\n", get_token_string(token));
+    token = token->next;
+  }
+}
+
 int is_keyword(char *word) {
   int is_match = 0;
   for (int i = 0; i < sizeof(keywords) / sizeof(*keywords); i++) {
@@ -19,31 +54,6 @@ int is_keyword(char *word) {
 
 int string_starts_with(char *string, char *starts_with) {
   return strncmp(string, starts_with, strlen(starts_with)) == 0;
-}
-
-void print_tokens(Token *token) {
-  while (token) {
-    char *type;
-    switch (token->type) {
-    case TOKEN_IDENTIFIER:
-      type = "id\0";
-      break;
-    case TOKEN_KEYWORD:
-      type = "key\0";
-      break;
-    case TOKEN_NUMBER:
-      type = "num\0";
-      break;
-    case TOKEN_STRING:
-      type = "str\0";
-      break;
-    case TOKEN_SYMBOL:
-      type = "sym\0";
-      break;
-    }
-    printf("└ token: %s, %.*s\n", type, token->length, token->value);
-    token = token->next;
-  }
 }
 
 Token *lex(char *input) {
@@ -174,5 +184,5 @@ Token *lex(char *input) {
     exit(1);
   }
 
-  return head->next;
+  return head->next == NULL ? head : head->next;
 }
