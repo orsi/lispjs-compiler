@@ -10,45 +10,55 @@ typedef struct {
 
 // lexing
 enum TokenType {
-  TOKEN_NULL,
   TOKEN_IDENTIFIER,
   TOKEN_KEYWORD,
   TOKEN_NUMBER,
   TOKEN_STRING,
   TOKEN_SYMBOL,
+  TOKEN_END_OF_FILE,
 };
 typedef struct Token Token;
 struct Token {
   enum TokenType type;
-  int length;
   char *value;
+  int length;
+  int line;
+  int column;
   Token *next;
 };
 
 char *get_token_string(Token *token);
-int is_keyword(char *word);
-int string_starts_with(char *string, char *starts_with);
+int is_keyword(char *word, int length);
 void print_tokens(Token *token);
 Token *lex(char *input);
 
 // parsing
+typedef struct {
+  char *name;
+
+} Variable;
+
 enum NodeType {
-  NODE_EMPTY,
+  NODE_EXPRESSION_ASSIGNMENT,
   NODE_EXPRESSION_BINARY,
-  NODE_VALUE_VARIABLE,
+  NODE_STATEMENT_BLOCK,
+  NODE_STATEMENT_CONDITIONAL,
   NODE_VALUE_DOUBLE,
   NODE_VALUE_INTEGER,
-  NODE_VALUE_STRING
+  NODE_VALUE_STRING,
+  NODE_VALUE_VARIABLE,
 };
 typedef struct Node Node;
 struct Node {
   enum NodeType type;
   union {
     char expression_symbol;
-    SimpleString variable_name;
     double value_double;
     int value_int;
     SimpleString value_string;
+    SimpleString value_variable;
+    Node *conditional;
+    Node *block;
   };
   Node *left;
   Node *right;
@@ -60,15 +70,19 @@ typedef struct {
   size_t capacity;
 } NodeArray;
 
+typedef struct {
+  NodeArray *statements;
+} Program;
+
 char *get_node_string(Node *node);
 void print_node_tree(Node *node, int level, char *prefix);
-Node *create_node();
+Node *create_node(enum NodeType type, void *value, Node *left, Node *right);
 NodeArray *create_node_array(NodeArray *node_array);
 NodeArray *push_node_array(NodeArray *node_array, Node *item);
 Node *pop_node_array(NodeArray *node_array);
 int get_operator_precedence(char s);
 Node *parse_node(Token **tokens, NodeArray *node_stack);
-Node *parse(Token *tokens);
+Program *parse(Token *tokens);
 
 // evaluate
 enum ResultType { RESULT_NONE, RESULT_INTEGER, RESULT_DOUBLE, RESULT_STRING };
@@ -85,8 +99,10 @@ char *get_result_string(Result *result);
 void print_result(Result *result);
 Result *evaluate_binary_expression(Result *result, char symbol, Node *left_node,
                                    Node *right_node);
-Result *evaluate_node(Node *node);
+Result *evaluate(Node *node);
 
 // utils
+int str_starts_with(char *string, char *starts_with);
 char *read_filepath(char *filepath);
+
 #endif

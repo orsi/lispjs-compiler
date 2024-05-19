@@ -1,5 +1,10 @@
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+
+int str_starts_with(char *string, char *starts_with) {
+  return strncmp(string, starts_with, strlen(starts_with)) == 0;
+}
 
 char *read_filepath(char *filepath) {
   FILE *file = fopen(filepath, "r");

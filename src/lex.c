@@ -1,188 +1,204 @@
 #include "./roxanne.h"
 #include <ctype.h>
+#include <malloc/_malloc.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 
-static char *keywords[] = {"if", "else"};
+static char *keywords[] = {"if",    "import", "else", "export",
+                           "false", "return", "true"};
 
-char *get_token_string(Token *token) {
-  char string[128];
-  int length;
-  switch (token->type) {
-  case TOKEN_NULL:
-    length = sprintf(string, "null");
-    break;
-  case TOKEN_IDENTIFIER:
-    length = sprintf(string, "id: %.*s", token->length, token->value);
-    break;
-  case TOKEN_KEYWORD:
-    length = sprintf(string, "key: %.*s", token->length, token->value);
-    break;
-  case TOKEN_NUMBER:
-    length = sprintf(string, "num: %.*s", token->length, token->value);
-    break;
-  case TOKEN_STRING:
-    length = sprintf(string, "str: %.*s", token->length, token->value);
-    break;
-  case TOKEN_SYMBOL:
-    length = sprintf(string, "sym: %.*s", token->length, token->value);
-    break;
-  }
-  char *token_string = malloc(length);
-  memcpy(token_string, string, length);
-  return token_string;
-}
-
-void print_tokens(Token *token) {
-  while (token) {
-    printf("└ %s\n", get_token_string(token));
-    token = token->next;
-  }
-}
-
-int is_keyword(char *word) {
+int is_keyword(char *word, int length) {
   int is_match = 0;
   for (int i = 0; i < sizeof(keywords) / sizeof(*keywords); i++) {
     char *key = keywords[i];
-    is_match = strcmp(word, key) == 0; // i hate this
+    is_match = strncmp(word, key, length) == 0; // i hate this
     if (is_match)
       break;
   }
   return is_match;
 }
 
-int string_starts_with(char *string, char *starts_with) {
-  return strncmp(string, starts_with, strlen(starts_with)) == 0;
+Token *create_token(enum TokenType type, char *string, int length) {
+  Token *token = malloc(sizeof(Token));
+  token->type = type;
+  token->value = string;
+  token->length = length;
+  return token;
 }
 
-Token *lex(char *input) {
-  Token *head = malloc(sizeof(Token));
-  Token *current = head;
+static Token *get_number_literal(char *string) {
+  char *start = string;
+  char *current = start;
+  while (*current &&
+         (isdigit(*current) || (*current == '.' && isdigit(current[1])))) {
+    // skips over escape chars
+    if (*current == '\\') {
+      current++;
+    }
 
-  while (*input) {
+    current++;
+  }
+
+  int length = current - start;
+  Token *token = create_token(TOKEN_NUMBER, start, length);
+  return token;
+}
+
+static Token *get_string_literal(char *string) {
+  char quote = *string;
+  char *start = string + 1;
+  char *current = start;
+  while (*current != quote) {
+    // if string ends before quote, error
+    if (*current == '\0') {
+      printf("error: no matching quote (%c) for: %c%.*s\n", quote, quote,
+             (int)(current - start), start);
+      exit(1);
+    }
+
+    current++;
+  }
+
+  int length = current - start;
+  Token *token = create_token(TOKEN_STRING, start, length);
+  current += 1; // skip past remaining quote
+  return token;
+}
+
+static Token *get_alpha_or_keyword(char *string) {
+  char *start = string;
+  char *current = start;
+  while (isalnum(*current)) {
+    current++;
+  }
+
+  int length = current - start;
+
+  Token *token;
+  if (is_keyword(start, length)) {
+    token = create_token(TOKEN_KEYWORD, start, length);
+  } else {
+    token = create_token(TOKEN_IDENTIFIER, start, length);
+  }
+
+  return token;
+}
+
+char *get_token_string(Token *token) {
+  char *token_string = NULL;
+  int length;
+  switch (token->type) {
+  case TOKEN_IDENTIFIER:
+    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
+    token_string = malloc(sizeof("token:id, ") + length);
+    sprintf(token_string, "token:id, %.*s", token->length, token->value);
+    break;
+  case TOKEN_KEYWORD:
+    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
+    token_string = malloc(sizeof("token:keyword, ") + length);
+    sprintf(token_string, "token:keyword, %.*s", token->length, token->value);
+    break;
+  case TOKEN_NUMBER:
+    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
+    token_string = malloc(sizeof("token:number, ") + length);
+    sprintf(token_string, "token:number, %.*s", token->length, token->value);
+    break;
+  case TOKEN_STRING:
+    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
+    token_string = malloc(sizeof("token:string, ") + length);
+    sprintf(token_string, "token:string, %.*s", token->length, token->value);
+    break;
+  case TOKEN_SYMBOL:
+    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
+    token_string = malloc(sizeof("token:symbol, ") + length);
+    sprintf(token_string, "token:symbol, %.*s", token->length, token->value);
+    break;
+  case TOKEN_END_OF_FILE:
+    token_string = malloc(sizeof("token:eof"));
+    strcpy(token_string, "token:eof");
+    break;
+  default:
+    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
+    token_string = malloc(sizeof("token:unknown, ") + length);
+    sprintf(token_string, "token:unknown, %.*s", token->length, token->value);
+    break;
+  }
+
+  return token_string;
+}
+
+void print_tokens(Token *token) {
+  while (token) {
+    printf("%s\n", get_token_string(token));
+    token = token->next;
+  }
+}
+
+Token *lex(char *string) {
+  Token head = {};
+  Token *current_token = &head;
+
+  while (string[0]) {
     // single-line comments
-    if (string_starts_with(input, "//")) {
-      while (*input != '\n' && *input != '\0') {
-        input++;
+    if (str_starts_with(string, "//")) {
+      while (*string && !str_starts_with(string, "\n")) {
+        string++;
       }
       continue;
     }
 
     // multi-line comments
-    if (string_starts_with(input, "/*")) {
-      while (!string_starts_with(input, "*/") && *input != '\0') {
-        input++;
+    if (str_starts_with(string, "/*")) {
+      while (*string && !str_starts_with(string, "*/")) {
+        string++;
       }
-      input += 2; // go past */
+      string += 2; // go past last "*/"
       continue;
     }
 
     // skip spaces/new-lines
-    if (isspace(*input)) {
-      input++;
+    if (isspace(string[0])) {
+      while (*string && isspace(string[0])) {
+        string++;
+      }
       continue;
     }
 
     // string literals
-    if (*input == '"' || *input == '`' || *input == '\'') {
-      char matchingQuote = *input;
-      char *start = ++input;
-      int is_error = 0;
-      while (*input != matchingQuote) {
-        // pass over escape char
-        if (*input == '\0') {
-          printf("error: no matching quote (%c) for: %c%.*s\n", matchingQuote,
-                 matchingQuote, (int)(input - start), start);
-          is_error = 1;
-          break;
-        }
-
-        // skips over escape chars
-        if (*input == '\\') {
-          input++;
-        }
-
-        input++;
-      }
-
-      if (is_error) {
-        continue;
-      }
-
-      int length = input - start;
-      char *value = malloc(length * sizeof(char));
-      strncpy(value, start, length);
-
-      Token *t = malloc(sizeof(Token));
-      t->type = TOKEN_STRING;
-      t->value = value;
-      t->length = length;
-      current = current->next = t;
-      input++;
+    if (str_starts_with(string, "'") || str_starts_with(string, "\"")) {
+      current_token = current_token->next = get_string_literal(string);
+      string += current_token->length + 2; // +2 for advancing past both quote
       continue;
     }
 
     // number
-    if (isdigit(*input) || (*input == '.' && isdigit(input[1]))) {
-      char *start = input;
-      while (((*input >= '0' && *input <= '9') ||
-              (*input == '.' && (input[1] >= '0' && input[1] <= '9')))) {
-        input++;
-      }
-      int length = input - start;
-      char *value = malloc(length * sizeof(char));
-      strncpy(value, start, length);
-
-      Token *t = malloc(sizeof(Token));
-      t->type = TOKEN_NUMBER;
-      t->value = value;
-      t->length = length;
-      current = current->next = t;
+    if (isdigit(string[0]) || (string[0] == '.' && isdigit(string[1]))) {
+      current_token = current_token->next = get_number_literal(string);
+      string += current_token->length;
       continue;
     }
 
     // symbols
-    if (ispunct(*input)) {
-      Token *t = malloc(sizeof(Token));
-      t->type = TOKEN_SYMBOL;
-      t->value = input;
-      t->length = 1;
-      current = current->next = t;
-      input++;
+    if (ispunct(string[0])) {
+      current_token = current_token->next =
+          create_token(TOKEN_SYMBOL, string, 1);
+      string++;
       continue;
     }
 
-    // identifiers
-    if (isalpha(*input)) {
-      char *start = input;
-      while (isalnum(*input)) {
-        input++;
-      }
-
-      int length = input - start;
-      char *value = malloc(length * sizeof(char));
-      strncpy(value, start, length);
-
-      Token *t = malloc(sizeof(Token));
-      if (is_keyword(value)) {
-        t->type = TOKEN_KEYWORD;
-        t->value = value;
-        t->length = length;
-        current = current->next = t;
-      } else {
-        t->type = TOKEN_IDENTIFIER;
-        t->value = value;
-        t->length = length;
-        current = current->next = t;
-      }
-
+    // identifier
+    if (isalpha(string[0])) {
+      current_token = current_token->next = get_alpha_or_keyword(string);
+      string += current_token->length;
       continue;
     }
 
-    printf("error: %c\n", *input);
+    printf("Error at %s\n", string);
     exit(1);
   }
 
-  return head->next == NULL ? head : head->next;
+  current_token = current_token->next =
+      create_token(TOKEN_END_OF_FILE, string, 0);
+  return head.next;
 }

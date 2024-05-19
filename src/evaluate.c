@@ -8,19 +8,19 @@ char *get_result_string(Result *result) {
   int length;
   switch (result->type) {
   case (RESULT_NONE): {
-    length = sprintf(string, "none");
+    length = sprintf(string, "result:none");
     break;
   }
   case (RESULT_INTEGER): {
-    length = sprintf(string, "int: %d", result->value_int);
+    length = sprintf(string, "result:integer, %d", result->value_int);
     break;
   }
   case (RESULT_DOUBLE): {
-    length = sprintf(string, "double: %f", result->value_double);
+    length = sprintf(string, "result:double, %f", result->value_double);
     break;
   }
   case RESULT_STRING: {
-    length = sprintf(string, "str: %.*s", result->value_string.length,
+    length = sprintf(string, "result:string, %.*s", result->value_string.length,
                      result->value_string.value);
     break;
   }
@@ -32,6 +32,25 @@ char *get_result_string(Result *result) {
 }
 
 void print_result(Result *result) { printf("%s", get_result_string(result)); }
+
+Result *evaluate_assignment_expression(Result *result, Node *left_node,
+                                       Node *right_node) {
+  Result *right_result = malloc(sizeof(Result));
+
+  // get right value
+  if (right_node->type == NODE_EXPRESSION_BINARY) {
+    evaluate_binary_expression(right_result, right_node->expression_symbol,
+                               right_node->left, right_node->right);
+  } else if (right_node->type == NODE_VALUE_DOUBLE) {
+    right_result->type = RESULT_DOUBLE;
+    right_result->value_double = right_node->value_double;
+  } else if (right_node->type == NODE_VALUE_INTEGER) {
+    right_result->type = RESULT_INTEGER;
+    right_result->value_double = right_node->value_double;
+  }
+
+  return result;
+}
 
 Result *evaluate_binary_expression(Result *result, char symbol, Node *left_node,
                                    Node *right_node) {
@@ -168,13 +187,17 @@ Result *evaluate_binary_expression(Result *result, char symbol, Node *left_node,
   return result;
 }
 
-Result *evaluate_node(Node *node) {
+Result *evaluate(Node *node) {
   Result *result = malloc(sizeof(Result));
 
   switch (node->type) {
   case (NODE_EXPRESSION_BINARY): {
     evaluate_binary_expression(result, node->expression_symbol, node->left,
                                node->right);
+    break;
+  }
+  case (NODE_EXPRESSION_ASSIGNMENT): {
+    evaluate_assignment_expression(result, node->left, node->right);
     break;
   }
   case (NODE_VALUE_DOUBLE): {
@@ -190,9 +213,8 @@ Result *evaluate_node(Node *node) {
   case NODE_VALUE_STRING: {
     result->type = RESULT_STRING;
     result->value_string = node->value_string;
+    break;
   }
-  case NODE_VALUE_VARIABLE:
-  case NODE_EMPTY:
   default: {
     result->type = RESULT_NONE;
     break;
