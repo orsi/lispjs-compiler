@@ -1,10 +1,5 @@
-#include "./roxanne.h"
-#include <math.h>
-#include <stdbool.h>
+#include "roxanne.h"
 #include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
-#include <unistd.h>
 
 static int TESTS_TOTAL = 0;
 static int TESTS_PASSED = 0;
@@ -16,11 +11,27 @@ void _expect(char *actual, char *expected) {
   TESTS_TOTAL++;
   if (strcmp(expected, actual) == 0) {
     TESTS_PASSED++;
-    printf("%-3d \x1b[32m✔ Passed\x1b[0m \"%s\"\n", TESTS_TOTAL, expected);
+    printf("%-3d \x1b[32m✔ Passed\x1b[0m %s \x1b[44m %.*s \x1b[0m\n",
+           TESTS_TOTAL, expected, (int)strlen(actual), actual);
   } else {
     TESTS_FAILED++;
-    printf("%-3d \x1b[31m✖ Failed\x1b[0m \"%s\"\n\tactual: \"%.*s\"\n",
+    printf("%-3d \x1b[31m✖ Failed\x1b[0m %s \x1b[44m %.*s \x1b[0m\n",
            TESTS_TOTAL, expected, (int)strlen(actual), actual);
+  }
+}
+
+#define expect_number(actual, expected) _expect_number(actual, expected)
+
+void _expect_number(double actual, double expected) {
+  TESTS_TOTAL++;
+  if (expected == actual) {
+    TESTS_PASSED++;
+    printf("%-3d \x1b[32m✔ Passed\x1b[0m %16f \x1b[44m %16f \x1b[0m\n",
+           TESTS_TOTAL, expected, actual);
+  } else {
+    TESTS_FAILED++;
+    printf("%-3d \x1b[31m✖ Failed\x1b[0m %16f \x1b[44m %16f \x1b[0m\n",
+           TESTS_TOTAL, expected, actual);
   }
 }
 
@@ -53,45 +64,60 @@ int main(void) {
   expect(get_token_string(last_token), "token:eof");
 
   // parse tests
-  expect(get_node_string(parse(lex(("1")))->statements->items[0]),
-         "node:integer, 1");
-  expect(get_node_string(parse(lex(("129.012")))->statements->items[0]),
-         "node:double, 129.012000");
-  expect(get_node_string(parse(lex(("\"hi\"")))->statements->items[0]),
+  expect(get_node_string(get_array_at(parse(lex("1"))->statements, 0)),
+         "node:number, 1");
+  expect(get_node_string(get_array_at(parse(lex("1.0"))->statements, 0)),
+         "node:number, 1");
+  expect(get_node_string(get_array_at(parse(lex("-1.0"))->statements, 0)),
+         "node:binary, -");
+  expect(get_node_string(get_array_at(parse(lex("0"))->statements, 0)),
+         "node:number, 0");
+  // TODO: Should force always leading digit?
+  expect(get_node_string(get_array_at(parse(lex(".0"))->statements, 0)),
+         "node:number, 0");
+  expect(get_node_string(get_array_at(parse(lex("-0"))->statements, 0)),
+         "node:binary, -");
+  expect(get_node_string(get_array_at(parse(lex("-.0"))->statements, 0)),
+         "node:binary, -");
+
+  // test double precision up to 16 total digits
+  expect_number(
+      ((Node *)get_array_at(parse(lex("123456789.123456786"))->statements, 0))
+          ->number,
+      123456789.123456786);
+  expect(get_node_string(
+             get_array_at(parse(lex("123456789.12345675"))->statements, 0)),
+         "node:number, 123456789.1234567");
+  expect(get_node_string(
+             get_array_at(parse(lex("99999999.99999999"))->statements, 0)),
+         "node:number, 99999999.99999999");
+  expect(get_node_string(
+             get_array_at(parse(lex("99999999.999999999"))->statements, 0)),
+         "node:number, 100000000");
+
+  expect(get_node_string(get_array_at(parse(lex(("\"hi\"")))->statements, 0)),
          "node:string, hi");
-  expect(get_node_string(parse(lex(("11 + 12.4")))->statements->items[0]),
-         "node:binary, +");
-  expect(get_node_string(parse(lex(("test")))->statements->items[0]),
-         "node:variable, test");
-  expect(get_node_string(parse(lex(("hello: 1")))->statements->items[0]),
-         "node:assignment, :");
-  expect(get_node_string(parse(lex(("(1 + 2) * 3")))->statements->items[0]),
-         "node:binary, +");
   expect(
-      get_node_string(
-          parse(lex(("if (1 + 2) * 3 > 1 {\n //\n } else { }")))->statements->items[0]),
-      "node:conditional, node:binary, >");
+      get_node_string(get_array_at(parse(lex(("11 + 12.4")))->statements, 0)),
+      "node:binary, +");
+  expect(get_node_string(get_array_at(parse(lex(("test")))->statements, 0)),
+         "node:identifier, test");
 
-  // eval tests
-  //   expect(stringify_evaluate("hi: 1"), "result:none");
-  //   expect(stringify_evaluate("1 + 2 * 3 + 4 + 5 * 6 * 7 + 8"),
-  //          "result:integer, 229");
-  //   expect(stringify_evaluate("2 * (3 + 4)"), "result:integer, 14");
-  //   expect(stringify_evaluate("250.0 * 1.5"), "result:double, 375.000000");
-  //   expect(stringify_evaluate("12938112.01224234233123 /
-  //   234.5122342342343"),
-  //          "result:double, 55170.307231");
-  //   expect(stringify_evaluate("1 / 2 + 3 - 4 % 5"),
-  //          "result:double,
-  //              - 0.500000 "); expect(stringify_evaluate("\"hello!\""),
-  //       "result:string,
-  //       hello !");
+  expect(get_node_string(get_array_at(parse(lex(("hello: 1")))->statements, 0)),
+         "node:assignment, :");
+  expect(get_node_string(get_array_at(
+             parse(lex(("if (1 + 2) * 3 > 1 {\n //\n } else {}")))->statements,
+             0)),
+         "node:conditional, node:binary, >");
 
-  // program tests
-  //   expect(stringify_parse(read_filepath("./src/mock/test.rox")),
-  //   "result:none");
-  //   Program program;
-  //   parse_program(lex(read_filepath("./src/mock/test.rox")), &program);
+  // precedence
+  expect(
+      get_node_string(get_array_at(parse(lex(("(1 + 2) * 3")))->statements, 0)),
+      "node:binary, *");
+  expect(get_node_string(
+             ((Node *)get_array_at(parse(lex(("1 + 2 * 3")))->statements, 0))
+                 ->right),
+         "node:binary, *");
 
   print_test_results();
 }
