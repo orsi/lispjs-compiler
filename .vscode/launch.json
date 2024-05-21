@@ -11,7 +11,7 @@
             "program": "${workspaceFolder}/bin/test",
             "args": [],
             "cwd": "${workspaceFolder}",
-            "preLaunchTask": "debug"
+            "preLaunchTask": "test"
         }
     ]
 }

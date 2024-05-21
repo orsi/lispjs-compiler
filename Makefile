@@ -12,6 +12,11 @@ clean:
 	@echo "Cleaning up..."
 	rm -rf bin
 
-debug: bin
-	@echo "\nDebugging...\n"
+test: bin
+	@echo "\nTesting\n"
 	clang -g3 ./src/test.c ./src/lex.c ./src/parse.c ./src/evaluate.c ./src/utils.c -o ./bin/test
+
+debug: bin
+	@echo "\nDebugging\n"
+	clang -g3 ./src/debug.c -o ./bin/debug
+	./bin/debug
