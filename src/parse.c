@@ -1,6 +1,6 @@
-#include "./roxanne.h"
+#include "roxanne.h"
 #include <ctype.h>
-#include <malloc/_malloc.h>
+#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
