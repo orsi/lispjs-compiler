@@ -74,11 +74,18 @@ Token *lex(char *string) {
     if (isdigit(string[0])) {
       char *current = string;
       while (*current &&
-             (isdigit(*current) || (*current == '.' && isdigit(current[1])))) {
+                 (isdigit(current[0]) || // is digit
+                  (current[0] == '.' &&
+                   isdigit(current[1])) || // is point followed by digit
+                  (current[0] == ',' &&
+                   isdigit(current[1]))) || // is comma followed by digit
+             (current[0] == ' ' &&
+              isdigit(current[1]))) // is space followed by digit
+      {
         current++;
       }
 
-      int length = current - string;
+      size_t length = current - string;
       Token *token = create_token(TOKEN_NUMBER, string, length);
       current_token = current_token->next = token;
       string += current_token->length;
@@ -103,11 +110,7 @@ Token *lex(char *string) {
       int length = current - string;
 
       Token *token;
-      if (is_keyword(string, length)) {
-        token = create_token(TOKEN_KEYWORD, string, length);
-      } else {
-        token = create_token(TOKEN_IDENTIFIER, string, length);
-      }
+      token = create_token(TOKEN_IDENTIFIER, string, length);
 
       current_token = current_token->next = token;
       string += current_token->length;

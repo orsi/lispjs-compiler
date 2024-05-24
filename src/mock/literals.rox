@@ -1,3 +1,33 @@
-1; // number
-1.0; // number
-"testing a string";
+1;      // number
+1.0;    // number
+
+// Three ways to group the number ten thousand with digit group separators.
+// 1) Space, the internationally recommended thousands separator.
+// 2) Period (or full stop), the thousands separator used in many non-English speaking countries.
+// 3) Comma, the thousands separator used in most English-speaking countries.
+
+10 000.00; // number with decimal period
+10 000,00; // number with decimal comma
+
+// other numbering systems
+
+#h123456789abcdef;     // hex
+#b110;                 // binary
+#o12345678;             // octal
+
+// strings
+// 1) all string should be template strings
+// 2) all string concatenation is done by inner interpolation, thus no operators
+
+"string"; // string
+"string ${"interpolation"}";  // string interpolation
+
+// boolean
+true;
+false;
+
+// arrays
+[];
+
+// objects
+{};

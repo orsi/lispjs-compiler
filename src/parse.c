@@ -58,12 +58,67 @@ int get_operator_precedence(char *s) {
   }
 }
 
+Node *create_node(enum NodeType type, void *value, Node *left, Node *right) {
+  Node *node = malloc(sizeof(Node));
+  if (node == NULL) {
+    printf("Error malloc node.");
+    exit(1);
+  }
+
+  node->type = type;
+  switch (node->type) {
+  case NODE_EXPRESSION:
+  case NODE_STATEMENT_BLOCK:
+  case NODE_STATEMENT_CONDITIONAL:
+    node->expression = (Node *)value;
+    break;
+  case NODE_EXPRESSION_ASSIGNMENT:
+  case NODE_EXPRESSION_BINARY:
+    node->operator_symbol = (char *)value;
+    break;
+  case NODE_LITERAL_ARRAY:
+    node->array = *(Array *)value;
+    break;
+  case NODE_LITERAL_BOOLEAN:
+    node->boolean = *(bool *)value;
+    break;
+  case NODE_LITERAL_IDENTIFIER:
+    node->identifier = (char *)value;
+    break;
+  case NODE_LITERAL_STRING:
+    node->string = *(String *)value;
+    break;
+  case NODE_LITERAL_NUMBER:
+    node->number = *(double *)value;
+    break;
+  case NODE_LITERAL_OBJECT:
+    node->object = *(Object *)value;
+    break;
+  }
+
+  node->left = left;
+  node->right = right;
+  return node;
+}
+
 Node *parse_expression(Token **tokens, Node *last_node) {
   Token *current_token = *tokens;
 
   // number literal
   if (current_token->type == TOKEN_NUMBER) {
-    double value = atof(current_token->value);
+    // strip all spaces
+    char normalizedNumber[current_token->length + 1];
+    char *position = current_token->value;
+    size_t i = 0;
+    while (position - current_token->value < current_token->length) {
+      if (position[0] != ' ') {
+        normalizedNumber[i] = position[0];
+        i++;
+      }
+      position++;
+    }
+    normalizedNumber[i] = '\0';
+    double value = atof(normalizedNumber);
     Node *node = create_node(NODE_LITERAL_NUMBER, &value, NULL, NULL);
     *tokens = current_token->next;
     return node;

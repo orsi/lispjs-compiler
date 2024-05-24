@@ -100,6 +100,16 @@ char *get_node_string(Node *node) {
   case (NODE_EXPRESSION_ASSIGNMENT):
     length = sprintf(buffer, "node:assignment, %s", node->operator_symbol);
     break;
+  case NODE_LITERAL_ARRAY:
+    length = sprintf(buffer, "node:array");
+    break;
+  case NODE_LITERAL_BOOLEAN:
+    length =
+        sprintf(buffer, "node:boolean:%s", node->boolean ? "true" : "false");
+    break;
+  case NODE_LITERAL_OBJECT:
+    length = sprintf(buffer, "node:object");
+    break;
   case (NODE_LITERAL_IDENTIFIER):
     length = sprintf(buffer, "node:identifier, %s", node->identifier);
     break;

@@ -6,6 +6,10 @@
 #include <string.h>
 
 typedef struct {
+  void **keys;
+} Object;
+
+typedef struct {
   size_t item_size;
   size_t length;
   size_t capacity;
@@ -45,9 +49,12 @@ enum NodeType {
   NODE_EXPRESSION_BINARY,
   NODE_STATEMENT_BLOCK,
   NODE_STATEMENT_CONDITIONAL,
-  NODE_LITERAL_NUMBER,
-  NODE_LITERAL_STRING,
+  NODE_LITERAL_ARRAY,
+  NODE_LITERAL_BOOLEAN,
   NODE_LITERAL_IDENTIFIER,
+  NODE_LITERAL_NUMBER,
+  NODE_LITERAL_OBJECT,
+  NODE_LITERAL_STRING,
 };
 typedef struct Node Node;
 struct Node {
