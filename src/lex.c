@@ -5,20 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static char *keywords[] = {"if",    "import", "else", "export",
-                           "false", "return", "true"};
-
-int is_keyword(char *word, int length) {
-  int is_match = 0;
-  for (int i = 0; i < sizeof(keywords) / sizeof(*keywords); i++) {
-    char *key = keywords[i];
-    is_match = strncmp(word, key, length) == 0; // i hate this
-    if (is_match)
-      break;
-  }
-  return is_match;
-}
-
 Token *create_token(enum TokenType type, char *string, int length) {
   Token *token = malloc(sizeof(Token));
   if (token == NULL) {

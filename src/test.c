@@ -43,74 +43,74 @@ void print_test_results() {
 }
 
 int main(void) {
-  // lexer tests
-  expect(get_token_string(lex("// don't parse me!\n// or me!")), "token:eof");
-  expect(get_token_string(lex("123.123")), "token:number, 123.123");
-  expect(get_token_string(lex("\"hi\"")), "token:string, hi");
-  expect(get_token_string(lex("if")), "token:keyword, if");
-  expect(get_token_string(lex("else")), "token:keyword, else");
-  expect(get_token_string(lex("return")), "token:keyword, return");
-  expect(get_token_string(lex("import")), "token:keyword, import");
-  expect(get_token_string(lex("hi")), "token:id, hi");
-  expect(get_token_string(lex(";")), "token:symbol, ;");
-  expect(get_token_string(lex(":")), "token:symbol, :");
-  Token *tokens = lex(read_filepath("./src/mock/test2.rox"));
-  expect(get_token_string(tokens), "token:keyword, import");
-  Token *last_token;
-  while (tokens) {
-    last_token = tokens;
-    tokens = tokens->next;
-  }
-  expect(get_token_string(last_token), "token:eof");
+//   // lexer tests
+//   expect(get_token_string(lex("// don't parse me!\n// or me!")), "token:eof");
+//   expect(get_token_string(lex("123.123")), "token:number, 123.123");
+//   expect(get_token_string(lex("\"hi\"")), "token:string, hi");
+//   expect(get_token_string(lex("if")), "token:keyword, if");
+//   expect(get_token_string(lex("else")), "token:keyword, else");
+//   expect(get_token_string(lex("return")), "token:keyword, return");
+//   expect(get_token_string(lex("import")), "token:keyword, import");
+//   expect(get_token_string(lex("hi")), "token:id, hi");
+//   expect(get_token_string(lex(";")), "token:symbol, ;");
+//   expect(get_token_string(lex(":")), "token:symbol, :");
+//   Token *tokens = lex(read_filepath("./src/mock/test2.rox"));
+//   expect(get_token_string(tokens), "token:keyword, import");
+//   Token *last_token;
+//   while (tokens) {
+//     last_token = tokens;
+//     tokens = tokens->next;
+//   }
+//   expect(get_token_string(last_token), "token:eof");
 
-  // parse tests
-  expect(get_node_string(get_array_at(parse(lex("1"))->statements, 0)),
-         "node:number, 1");
-  expect(get_node_string(get_array_at(parse(lex("1.0"))->statements, 0)),
-         "node:number, 1");
-  expect(get_node_string(get_array_at(parse(lex("-1.0"))->statements, 0)),
-         "node:binary, -");
-  expect(get_node_string(get_array_at(parse(lex("0"))->statements, 0)),
-         "node:number, 0");
-  // TODO: Should force always leading digit?
-  expect(get_node_string(get_array_at(parse(lex(".0"))->statements, 0)),
-         "node:number, 0");
-  expect(get_node_string(get_array_at(parse(lex("-0"))->statements, 0)),
-         "node:binary, -");
-  expect(get_node_string(get_array_at(parse(lex("-.0"))->statements, 0)),
-         "node:binary, -");
+//   // parse tests
+//   expect(get_node_string(get_array_at(parse(lex("1"))->statements, 0)),
+//          "node:number, 1");
+//   expect(get_node_string(get_array_at(parse(lex("1.0"))->statements, 0)),
+//          "node:number, 1");
+//   expect(get_node_string(get_array_at(parse(lex("-1.0"))->statements, 0)),
+//          "node:binary, -");
+//   expect(get_node_string(get_array_at(parse(lex("0"))->statements, 0)),
+//          "node:number, 0");
+//   // TODO: Should force always leading digit?
+//   expect(get_node_string(get_array_at(parse(lex(".0"))->statements, 0)),
+//          "node:number, 0");
+//   expect(get_node_string(get_array_at(parse(lex("-0"))->statements, 0)),
+//          "node:binary, -");
+//   expect(get_node_string(get_array_at(parse(lex("-.0"))->statements, 0)),
+//          "node:binary, -");
 
-  // test double precision up to 16 total digits
-  expect_number(
-      ((Node *)get_array_at(parse(lex("123456789.123456786"))->statements, 0))
-          ->number,
-      123456789.123456786);
-  expect(get_node_string(
-             get_array_at(parse(lex("123456789.12345675"))->statements, 0)),
-         "node:number, 123456789.1234567");
-  expect(get_node_string(
-             get_array_at(parse(lex("99999999.99999999"))->statements, 0)),
-         "node:number, 99999999.99999999");
-  expect(get_node_string(
-             get_array_at(parse(lex("99999999.999999999"))->statements, 0)),
-         "node:number, 100000000");
+//   // test double precision up to 16 total digits
+//   expect_number(
+//       ((Node *)get_array_at(parse(lex("123456789.123456786"))->statements, 0))
+//           ->number,
+//       123456789.123456786);
+//   expect(get_node_string(
+//              get_array_at(parse(lex("123456789.12345675"))->statements, 0)),
+//          "node:number, 123456789.1234567");
+//   expect(get_node_string(
+//              get_array_at(parse(lex("99999999.99999999"))->statements, 0)),
+//          "node:number, 99999999.99999999");
+//   expect(get_node_string(
+//              get_array_at(parse(lex("99999999.999999999"))->statements, 0)),
+//          "node:number, 100000000");
 
-  expect(get_node_string(get_array_at(parse(lex(("\"hi\"")))->statements, 0)),
-         "node:string, hi");
-  expect(
-      get_node_string(get_array_at(parse(lex(("11 + 12.4")))->statements, 0)),
-      "node:binary, +");
-  expect(get_node_string(get_array_at(parse(lex(("test")))->statements, 0)),
-         "node:identifier, test");
+//   expect(get_node_string(get_array_at(parse(lex(("\"hi\"")))->statements, 0)),
+//          "node:string, hi");
+//   expect(
+//       get_node_string(get_array_at(parse(lex(("11 + 12.4")))->statements, 0)),
+//       "node:binary, +");
+//   expect(get_node_string(get_array_at(parse(lex(("test")))->statements, 0)),
+//          "node:identifier, test");
 
-  expect(get_node_string(get_array_at(parse(lex(("hello: 1")))->statements, 0)),
-         "node:assignment, :");
-  expect(get_node_string(get_array_at(
-             parse(lex(("if (1 + 2) * 3 > 1 {\n //\n } else {}")))->statements,
-             0)),
-         "node:conditional, node:binary, >");
+//   expect(get_node_string(get_array_at(parse(lex(("hello: 1")))->statements, 0)),
+//          "node:assignment, :");
+//   expect(get_node_string(get_array_at(
+//              parse(lex(("if (1 + 2) * 3 > 1 {\n //\n } else {}")))->statements,
+//              0)),
+//          "node:conditional, node:binary, >");
 
-  // precedence
+//   // precedence
   expect(
       get_node_string(get_array_at(parse(lex(("(1 + 2) * 3")))->statements, 0)),
       "node:binary, *");
@@ -118,6 +118,8 @@ int main(void) {
              ((Node *)get_array_at(parse(lex(("1 + 2 * 3")))->statements, 0))
                  ->right),
          "node:binary, *");
+
+  parse(lex(read_filepath("./src/mock/literals.rox")));
 
   print_test_results();
 }

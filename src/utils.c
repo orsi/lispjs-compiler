@@ -155,15 +155,6 @@ char *get_token_string(Token *token) {
     }
     sprintf(token_string, "token:id, %.*s", token->length, token->value);
     break;
-  case TOKEN_KEYWORD:
-    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
-    token_string = malloc(sizeof("token:keyword, ") + length);
-    if (token_string == NULL) {
-      printf("Error: malloc token_string");
-      exit(1);
-    }
-    sprintf(token_string, "token:keyword, %.*s", token->length, token->value);
-    break;
   case TOKEN_NUMBER:
     length = snprintf(NULL, 0, "%.*s", token->length, token->value);
     token_string = malloc(sizeof("token:number, ") + length);

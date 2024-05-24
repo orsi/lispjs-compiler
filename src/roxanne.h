@@ -20,7 +20,6 @@ typedef struct {
 // lexing
 enum TokenType {
   TOKEN_IDENTIFIER,
-  TOKEN_KEYWORD,
   TOKEN_NUMBER,
   TOKEN_STRING,
   TOKEN_SYMBOL,
@@ -36,7 +35,6 @@ struct Token {
   Token *next;
 };
 
-int is_keyword(char *word, int length);
 Token *create_token(enum TokenType type, char *string, int length);
 Token *lex(char *input);
 
@@ -57,21 +55,24 @@ struct Node {
   Node *left;
   Node *right;
   union {
+    bool boolean;
     char *operator_symbol;
     char *identifier;
     double number;
     String string;
     Node *expression;
+    Array array;
+    Object object;
   };
 };
 typedef struct {
   Array *statements;
 } Program;
 
-Node *create_node(enum NodeType type, void *value, Node *left, Node *right);
-
+int is_keyword(char *word, int length);
 bool is_symbol(Token *tokens, char *operator_symbol);
 char *get_operator(Token *tokens);
+Node *create_node(enum NodeType type, void *value, Node *left, Node *right);
 int get_operator_precedence(char *s);
 Node *parse_expression(Token **tokens, Node *last_node);
 Program *parse(Token *tokens);

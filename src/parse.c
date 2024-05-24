@@ -5,38 +5,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-Node *create_node(enum NodeType type, void *value, Node *left, Node *right) {
-  Node *node = malloc(sizeof(Node));
-  if (node == NULL) {
-    printf("Error malloc node.");
-    exit(1);
-  }
+static char *keywords[] = {"if",    "import", "else", "export",
+                           "false", "return", "true"};
 
-  node->type = type;
-  switch (node->type) {
-  case NODE_EXPRESSION:
-  case NODE_STATEMENT_BLOCK:
-  case NODE_STATEMENT_CONDITIONAL:
-    node->expression = (Node *)value;
-    break;
-  case NODE_EXPRESSION_ASSIGNMENT:
-  case NODE_EXPRESSION_BINARY:
-    node->operator_symbol = (char *)value;
-    break;
-  case NODE_LITERAL_IDENTIFIER:
-    node->identifier = (char *)value;
-    break;
-  case NODE_LITERAL_STRING:
-    node->string = *(String *)value;
-    break;
-  case NODE_LITERAL_NUMBER:
-    node->number = *(double *)value;
-    break;
+int is_keyword(char *word, int length) {
+  int is_match = 0;
+  for (int i = 0; i < sizeof(keywords) / sizeof(*keywords); i++) {
+    char *key = keywords[i];
+    is_match = strncmp(word, key, length) == 0; // i hate this
+    if (is_match)
+      break;
   }
-
-  node->left = left;
-  node->right = right;
-  return node;
+  return is_match;
 }
 
 char *get_operator(Token *tokens) {
@@ -103,8 +83,26 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     return node;
   }
 
+  // identifier: true
+  if (current_token->type == TOKEN_IDENTIFIER &&
+      starts_with(current_token->value, "true")) {
+    bool value = true;
+    Node *node = create_node(NODE_LITERAL_BOOLEAN, &value, NULL, NULL);
+    *tokens = current_token->next;
+    return node;
+  }
+
+  // identifier: false
+  if (current_token->type == TOKEN_IDENTIFIER &&
+      starts_with(current_token->value, "false")) {
+    bool value = false;
+    Node *node = create_node(NODE_LITERAL_BOOLEAN, &value, NULL, NULL);
+    *tokens = current_token->next;
+    return node;
+  }
+
   // keyword: if
-  if (current_token->type == TOKEN_KEYWORD &&
+  if (current_token->type == TOKEN_IDENTIFIER &&
       starts_with(current_token->value, "if")) {
     *tokens = current_token->next;
     Node *condition_root = NULL;
@@ -121,7 +119,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
   // keyword: else
   // the else keyword is only relevant as a 'block' statement the right side
   // of an if conditional, so we skip to the nearest opening block
-  if (current_token->type == TOKEN_KEYWORD &&
+  if (current_token->type == TOKEN_IDENTIFIER &&
       starts_with(current_token->value, "else")) {
     *tokens = current_token->next;
     while (*tokens && (*tokens)->value[0] != '{') {
