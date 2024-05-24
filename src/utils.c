@@ -174,6 +174,15 @@ char *get_token_string(Token *token) {
     }
     sprintf(token_string, "token:number, %.*s", token->length, token->value);
     break;
+  case TOKEN_NUMBER_ALTERNATIVE_BASE:
+    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
+    token_string = malloc(sizeof("token:number_alternative_base, ") + length);
+    if (token_string == NULL) {
+      printf("Error: malloc token_string");
+      exit(1);
+    }
+    sprintf(token_string, "token:number, %.*s", token->length, token->value);
+    break;
   case TOKEN_STRING:
     length = snprintf(NULL, 0, "%.*s", token->length, token->value);
     token_string = malloc(sizeof("token:string, ") + length);
@@ -199,15 +208,6 @@ char *get_token_string(Token *token) {
       exit(1);
     }
     strcpy(token_string, "token:eof");
-    break;
-  default:
-    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
-    token_string = malloc(sizeof("token:unknown, ") + length);
-    if (token_string == NULL) {
-      printf("Error: malloc token_string");
-      exit(1);
-    }
-    sprintf(token_string, "token:unknown, %.*s", token->length, token->value);
     break;
   }
 

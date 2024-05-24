@@ -11,8 +11,8 @@
 
 // other numbering systems
 
-#h123456789abcdef;     // hex
 #b110;                 // binary
+#h123456789abcdef;     // hex
 #o12345678;             // octal
 
 // strings

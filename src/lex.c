@@ -91,6 +91,38 @@ Token *lex(char *string) {
       continue;
     }
 
+    // binary/hexadecimal/octal literals
+    if (ispunct(string[0]) && string[0] == '#') {
+      char *current = string;
+      current++; // advance past #
+      char baseIndicator = current[0];
+      if (baseIndicator != 'b' && baseIndicator != 'h' &&
+          baseIndicator != 'o') {
+        printf("Error: #%c is not a valid number base", baseIndicator);
+        exit(1);
+      }
+      current++; // advance past base
+
+      while (*current &&
+                 (isalnum(current[0]) || // is digit
+                  (current[0] == '.' &&
+                   isalnum(current[1])) || // is point followed by digit
+                  (current[0] == ',' &&
+                   isalnum(current[1]))) || // is comma followed by digit
+             (current[0] == ' ' &&
+              isalnum(current[1]))) // is space followed by digit
+      {
+        current++;
+      }
+
+      size_t length = current - string;
+      Token *token =
+          create_token(TOKEN_NUMBER_ALTERNATIVE_BASE, string, length);
+      current_token = current_token->next = token;
+      string += current_token->length;
+      continue;
+    }
+
     // symbols
     if (ispunct(string[0])) {
       current_token = current_token->next =

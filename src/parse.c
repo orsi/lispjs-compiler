@@ -104,7 +104,7 @@ Node *create_node(enum NodeType type, void *value, Node *left, Node *right) {
 Node *parse_expression(Token **tokens, Node *last_node) {
   Token *current_token = *tokens;
 
-  // number literal
+  // literal number
   if (current_token->type == TOKEN_NUMBER) {
     // strip all spaces
     char normalizedNumber[current_token->length + 1];
@@ -124,6 +124,30 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     return node;
   }
 
+  // literal binary number
+  if (current_token->type == TOKEN_NUMBER_ALTERNATIVE_BASE &&
+      starts_with(current_token->value, "#")) {
+    // strip all spaces from value and provide null terminator
+    char normalizedNumber[current_token->length + 1];
+    char *position = current_token->value;
+    position++; // # skip
+    int base = position[0] == 'b' ? 2 : position[0] == 'o' ? 8 : 16;
+    position++; // b/h/o skip
+    size_t i = 0;
+    while (position - current_token->value < current_token->length) {
+      if (position[0] != ' ') {
+        normalizedNumber[i] = position[0];
+        i++;
+      }
+      position++;
+    }
+    normalizedNumber[i] = '\0';
+    double value = strtol(normalizedNumber, NULL, base);
+    Node *node = create_node(NODE_LITERAL_NUMBER, &value, NULL, NULL);
+    *tokens = current_token->next;
+    return node;
+  }
+
   // string literal
   if (current_token->type == TOKEN_STRING) {
     String *value = malloc(sizeof(String));
@@ -138,7 +162,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     return node;
   }
 
-  // identifier: true
+  // identifier literal: true
   if (current_token->type == TOKEN_IDENTIFIER &&
       starts_with(current_token->value, "true")) {
     bool value = true;
@@ -147,7 +171,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     return node;
   }
 
-  // identifier: false
+  // identifier literal: false
   if (current_token->type == TOKEN_IDENTIFIER &&
       starts_with(current_token->value, "false")) {
     bool value = false;
@@ -156,7 +180,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     return node;
   }
 
-  // keyword: if
+  // identifier keyword: if
   if (current_token->type == TOKEN_IDENTIFIER &&
       starts_with(current_token->value, "if")) {
     *tokens = current_token->next;
@@ -171,7 +195,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     return node;
   }
 
-  // keyword: else
+  // identifier keyword: else
   // the else keyword is only relevant as a 'block' statement the right side
   // of an if conditional, so we skip to the nearest opening block
   if (current_token->type == TOKEN_IDENTIFIER &&
