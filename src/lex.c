@@ -17,7 +17,7 @@ Token *create_token(enum TokenType type, char *string, int length) {
 }
 
 Token *lex(char *string) {
-  Token head = {};
+  Token head = {0};
   Token *current_token = &head;
 
   while (string[0]) {
@@ -72,14 +72,13 @@ Token *lex(char *string) {
     // number literal
     if (isdigit(string[0])) {
       char *current = string;
-      while (*current &&
-                 (isdigit(current[0]) || // is digit
-                  (current[0] == '.' &&
-                   isdigit(current[1])) || // is point followed by digit
-                  (current[0] == ',' &&
-                   isdigit(current[1]))) || // is comma followed by digit
-             (current[0] == ' ' &&
-              isdigit(current[1]))) // is space followed by digit
+      while (*current && (isdigit(current[0]) || // is digit
+                          (current[0] == '.' &&
+                           isdigit(current[1])) || // is point followed by digit
+                          (current[0] == ',' &&
+                           isdigit(current[1])) || // is comma followed by digit
+                          (current[0] == ' ' &&
+                           isdigit(current[1])))) // is space followed by digit
       {
         current++;
       }
@@ -104,14 +103,14 @@ Token *lex(char *string) {
       current++; // advance past base
 
       while (*current &&
-                 (isalnum(current[0]) || // is digit
-                  (current[0] == '.' &&
-                   isalnum(current[1])) || // is point followed by digit
-                  (current[0] == ',' &&
-                   isalnum(current[1]))) || // is comma followed by digit
-             (current[0] == ' ' &&
-              isalnum(current[1]))) // is space followed by digit
-      {
+             (isalnum(current[0]) || // is digit
+              ((current[0] == '.' &&
+                isalnum(current[1])) || // is point followed by digit
+               (current[0] == ',' &&
+                isalnum(current[1])) || // is comma followed by digit
+               (current[0] == ' ' &&
+                isalnum(current[1])) // is space followed by digit
+               ))) {
         current++;
       }
 

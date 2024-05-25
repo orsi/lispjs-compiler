@@ -34,7 +34,7 @@ typedef struct Token Token;
 struct Token {
   enum TokenType type;
   char *value;
-  int length;
+  size_t length;
   int line;
   int column;
   Token *next;
@@ -78,7 +78,7 @@ typedef struct {
 } Program;
 
 int is_keyword(char *word, int length);
-bool is_symbol(Token *tokens, char *operator_symbol);
+bool is_symbol(Token *tokens, const char *operator_symbol);
 char *get_operator(Token *tokens);
 Node *create_node(enum NodeType type, void *value, Node *left, Node *right);
 int get_operator_precedence(char *s);
@@ -101,11 +101,11 @@ Result *evaluate_binary_expression(Result *result, char *operator_symbol,
 Result *evaluate(Node *node);
 
 // utils
-bool starts_with(char *a, char *b);
-bool exact(char *a, char *b);
-char *read_filepath(char *filepath);
+bool starts_with(char *a, const char *b);
+bool exact(char *a, const char *b);
+char *read_filepath(const char *filepath);
 
-Array *create_array();
+Array *create_array(void);
 Array *push_array(Array *array, void *item);
 void *get_array_at(Array *array, size_t index);
 void *pop_array(Array *array);
@@ -113,7 +113,7 @@ void *pop_array(Array *array);
 char *get_token_string(Token *token);
 void print_tokens(Token *token);
 char *get_node_string(Node *node);
-void print_node_tree(Node *node, int level, char *prefix);
+void print_node_tree(Node *node, int level, const char *prefix);
 char *get_result_string(Result *result);
 void print_result(Result *result);
 

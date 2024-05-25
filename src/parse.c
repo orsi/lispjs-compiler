@@ -5,13 +5,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-static char *keywords[] = {"if",    "import", "else", "export",
-                           "false", "return", "true"};
+static const char *keywords[] = {"if",    "import", "else", "export",
+                                 "false", "return", "true"};
 
 int is_keyword(char *word, int length) {
   int is_match = 0;
-  for (int i = 0; i < sizeof(keywords) / sizeof(*keywords); i++) {
-    char *key = keywords[i];
+  for (size_t i = 0; i < sizeof(keywords) / sizeof(*keywords); i++) {
+    const char *key = keywords[i];
     is_match = strncmp(word, key, length) == 0; // i hate this
     if (is_match)
       break;
@@ -34,7 +34,7 @@ char *get_operator(Token *tokens) {
   return operator_symbol;
 }
 
-bool is_symbol(Token *tokens, char *operator_symbol) {
+bool is_symbol(Token *tokens, const char *operator_symbol) {
   size_t length = strlen(operator_symbol);
   Token *current_token = tokens;
 
@@ -110,7 +110,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     char normalizedNumber[current_token->length + 1];
     char *position = current_token->value;
     size_t i = 0;
-    while (position - current_token->value < current_token->length) {
+    while ((size_t)(position - current_token->value) < current_token->length) {
       if (position[0] != ' ') {
         normalizedNumber[i] = position[0];
         i++;
@@ -134,7 +134,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     int base = position[0] == 'b' ? 2 : position[0] == 'o' ? 8 : 16;
     position++; // b/h/o skip
     size_t i = 0;
-    while (position - current_token->value < current_token->length) {
+    while ((size_t)(position - current_token->value) < current_token->length) {
       if (position[0] != ' ') {
         normalizedNumber[i] = position[0];
         i++;

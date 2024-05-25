@@ -4,11 +4,13 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool starts_with(char *a, char *b) { return strncmp(a, b, strlen(b)) == 0; }
+bool starts_with(char *a, const char *b) {
+  return strncmp(a, b, strlen(b)) == 0;
+}
 
-bool exact(char *a, char *b) { return strncmp(a, b, strlen(b)) == 0; }
+bool exact(char *a, const char *b) { return strncmp(a, b, strlen(b)) == 0; }
 
-char *read_filepath(char *filepath) {
+char *read_filepath(const char *filepath) {
   FILE *file = fopen(filepath, "r");
   if (file == NULL) {
     printf("Error: Filepath %s does not exist.\n", filepath);
@@ -33,7 +35,7 @@ char *read_filepath(char *filepath) {
   return contents;
 }
 
-Array *create_array() {
+Array *create_array(void) {
   Array *array = malloc(sizeof(Array));
   if (array == NULL) {
     printf("Could not malloc array.");
@@ -139,7 +141,7 @@ char *get_node_string(Node *node) {
   return node_string;
 }
 
-void print_node_tree(Node *node, int level, char *prefix) {
+void print_node_tree(Node *node, int level, const char *prefix) {
   int indent = level * 2;
   printf("%*s└ %s%s\n", indent, "", prefix, get_node_string(node));
 
@@ -157,49 +159,49 @@ char *get_token_string(Token *token) {
   int length;
   switch (token->type) {
   case TOKEN_IDENTIFIER:
-    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
     token_string = malloc(sizeof("token:id, ") + length);
     if (token_string == NULL) {
       printf("Error: malloc token_string");
       exit(1);
     }
-    sprintf(token_string, "token:id, %.*s", token->length, token->value);
+    sprintf(token_string, "token:id, %.*s", (int)token->length, token->value);
     break;
   case TOKEN_NUMBER:
-    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
     token_string = malloc(sizeof("token:number, ") + length);
     if (token_string == NULL) {
       printf("Error: malloc token_string");
       exit(1);
     }
-    sprintf(token_string, "token:number, %.*s", token->length, token->value);
+    sprintf(token_string, "token:number, %.*s", (int)token->length, token->value);
     break;
   case TOKEN_NUMBER_ALTERNATIVE_BASE:
-    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
     token_string = malloc(sizeof("token:number_alternative_base, ") + length);
     if (token_string == NULL) {
       printf("Error: malloc token_string");
       exit(1);
     }
-    sprintf(token_string, "token:number, %.*s", token->length, token->value);
+    sprintf(token_string, "token:number, %.*s", (int)token->length, token->value);
     break;
   case TOKEN_STRING:
-    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
     token_string = malloc(sizeof("token:string, ") + length);
     if (token_string == NULL) {
       printf("Error: malloc token_string");
       exit(1);
     }
-    sprintf(token_string, "token:string, %.*s", token->length, token->value);
+    sprintf(token_string, "token:string, %.*s", (int)token->length, token->value);
     break;
   case TOKEN_SYMBOL:
-    length = snprintf(NULL, 0, "%.*s", token->length, token->value);
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
     token_string = malloc(sizeof("token:symbol, ") + length);
     if (token_string == NULL) {
       printf("Error: malloc token_string");
       exit(1);
     }
-    sprintf(token_string, "token:symbol, %.*s", token->length, token->value);
+    sprintf(token_string, "token:symbol, %.*s", (int)token->length, token->value);
     break;
   case TOKEN_END_OF_FILE:
     token_string = malloc(sizeof("token:eof"));

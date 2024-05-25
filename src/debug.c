@@ -6,7 +6,7 @@ int main(int argc, char *argv[]) {
 
   printf("wtf does strcmp do? %d\n", strcmp("?!.", "?!"));
 
-  char *hi = "hi";
+  const char *hi = "hi";
   // just testing how indexing char* and formatting strings works
   printf("%d, %d", hi[1] == 'i', hi[0]);
 

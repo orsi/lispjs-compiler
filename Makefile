@@ -20,6 +20,7 @@ clean:
 test: bin
 	@echo "\nTesting\n"
 	$(CC) $(CFLAGS) -g3 ./src/test.c ./src/lex.c ./src/parse.c ./src/evaluate.c ./src/utils.c -o ./bin/test
+	./bin/test
 
 debug: bin
 	@echo "\nDebugging\n"
