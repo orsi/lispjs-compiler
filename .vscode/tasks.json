@@ -4,9 +4,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "test",
+            "label": "build-test",
             "type": "shell",
-            "command": "make test"
+            "command": "make build-test"
         }
     ]
 }

@@ -3,7 +3,7 @@ CFLAGS += -Wall -Wextra -Wpedantic \
           -Wwrite-strings -Wstrict-prototypes -Wold-style-definition \
           -Wredundant-decls -Wnested-externs -Wmissing-include-dirs
 
-.PHONEY: build bin clean debug test
+.PHONEY: all
 
 all: build
 
@@ -14,15 +14,16 @@ bin:
 	mkdir bin
 
 clean:
-	@echo "Cleaning up..."
 	rm -rf bin
 
-test: bin
-	@echo "\nTesting\n"
+build-test: bin
 	$(CC) $(CFLAGS) -g3 ./src/test.c ./src/lex.c ./src/parse.c ./src/evaluate.c ./src/utils.c -o ./bin/test
+	
+test: build-test
 	./bin/test
 
-debug: bin
-	@echo "\nDebugging\n"
+build-debug: bin
 	$(CC) $(CFLAGS) -g3 ./src/debug.c -o ./bin/debug
+
+debug: build-debug
 	./bin/debug
