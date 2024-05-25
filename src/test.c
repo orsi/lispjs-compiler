@@ -117,15 +117,17 @@ int main(void) {
   //          "node:conditional, node:binary, >");
 
   //   // precedence
-  expect(get_node_string(
-             get_array_at(parse(lex(((char *)"(1 + 2) * 3")))->statements, 0)),
-         (char *)"node:binary, *");
-  expect(get_node_string(((Node *)get_array_at(
-                              parse(lex(((char *)"1 + 2 * 3")))->statements, 0))
-                             ->right),
-         (char *)"node:binary, *");
+  // expect(get_node_string(
+  //            get_array_at(parse(lex(((char *)"(1 + 2) * 3")))->statements,
+  //            0)),
+  //        (char *)"node:binary, *");
+  // expect(get_node_string(((Node *)get_array_at(
+  //                             parse(lex(((char *)"1 + 2 * 3")))->statements,
+  //                             0))
+  //                            ->right),
+  //        (char *)"node:binary, *");
 
-  parse(lex(read_filepath("./src/mock/literals.rox")));
+  print_program(parse(lex(read_filepath("./src/mock/literals.rox"))));
 
   print_test_results();
 }

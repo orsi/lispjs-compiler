@@ -20,7 +20,7 @@ Token *lex(char *string) {
   Token head = {0};
   Token *current_token = &head;
 
-  while (string[0]) {
+  while (*string) {
     // comment: single-line
     if (starts_with(string, "//")) {
       while (*string && !starts_with(string, "\n")) {

@@ -11,23 +11,28 @@
 
 // other numbering systems
 
-#b110;                 // binary
-#h123456789abcdef;     // hex
+#b110;                  // binary
+#h123456789abcdef;      // hex
 #o12345678;             // octal
 
 // strings
-// 1) all string should be template strings
+// 1) all strings should be template strings
 // 2) all string concatenation is done by inner interpolation, thus no operators
 
 "string"; // string
 "string ${"interpolation"}";  // string interpolation
+"all interpolated values convert at end to string: ${1 + 2 * 3}"; 
 
 // boolean
 true;
 false;
 
 // arrays
-[];
+[1,true,#b1,"hello!"];
 
 // objects
-{};
+{
+    arbitrary: "keys",
+    like: 1,
+    2: "are great"
+};

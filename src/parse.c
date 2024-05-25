@@ -148,7 +148,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     return node;
   }
 
-  // string literal
+  // literal string
   if (current_token->type == TOKEN_STRING) {
     String *value = malloc(sizeof(String));
     if (value == NULL) {
@@ -158,6 +158,57 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     value->length = current_token->length;
     value->value = current_token->value;
     Node *node = create_node(NODE_LITERAL_STRING, value, NULL, NULL);
+    *tokens = current_token->next;
+    return node;
+  }
+
+  // literal array
+  if (current_token->type == TOKEN_SYMBOL &&
+      starts_with(current_token->value, "[")) {
+    current_token = current_token->next;
+    Array *node_literals = create_array();
+    while (current_token && !starts_with(current_token->value, "]")) {
+      if (current_token->type == TOKEN_END_OF_FILE) {
+        break;
+      }
+
+      if (current_token->type == TOKEN_SYMBOL &&
+          starts_with(current_token->value, ",")) {
+        // skip
+        current_token = current_token->next;
+      } else {
+        Node *node = parse_expression(&current_token, NULL);
+        push_array(node_literals, node);
+      }
+    }
+
+    Node *node = create_node(NODE_LITERAL_ARRAY, node_literals, NULL, NULL);
+    *tokens = current_token->next;
+    return node;
+  }
+
+  // literal object
+  if (current_token->type == TOKEN_SYMBOL && is_symbol(current_token, "{")) {
+    current_token = current_token->next;
+    Node *root = NULL;
+    Array *node_assignments = create_array();
+    while (current_token && !starts_with(current_token->value, "}")) {
+      if (current_token->type == TOKEN_END_OF_FILE) {
+        break;
+      }
+
+      if (current_token->type == TOKEN_SYMBOL &&
+          starts_with(current_token->value, ",")) {
+        // end of current assignment
+        current_token = current_token->next;
+        push_array(node_assignments, root);
+      } else {
+        Node *node = parse_expression(&current_token, root);
+        root = node;
+      }
+    }
+
+    Node *node = create_node(NODE_LITERAL_OBJECT, node_assignments, NULL, NULL);
     *tokens = current_token->next;
     return node;
   }
@@ -239,27 +290,11 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     return node;
   }
 
-  // block statement
-  if (current_token->type == TOKEN_SYMBOL && is_symbol(current_token, "{")) {
-    *tokens = current_token->next;
-    Node *block_root = NULL;
-    while (*tokens) {
-      if (starts_with((*tokens)->value, "}")) {
-        *tokens = (*tokens)->next; // skip last }
-        break;
-      }
-      Node *block_node = parse_expression(tokens, NULL);
-      block_root = block_node;
-    }
-
-    Node *node = create_node(NODE_STATEMENT_BLOCK, block_root, NULL, NULL);
-    return node;
-  }
-
   char *operator_symbol = get_operator(current_token);
 
   // assignment expression
-  if (current_token->type == TOKEN_SYMBOL && starts_with(operator_symbol, ":")) {
+  if (current_token->type == TOKEN_SYMBOL &&
+      starts_with(operator_symbol, ":")) {
     *tokens = current_token->next;
     Node *node = create_node(NODE_EXPRESSION_ASSIGNMENT, operator_symbol,
                              last_node, parse_expression(tokens, last_node));
@@ -317,12 +352,15 @@ Program *parse(Token *tokens) {
     if (tokens->type == TOKEN_SYMBOL && starts_with(tokens->value, ";")) {
       tokens = tokens->next;
       push_array(program->statements, current_root);
+      current_root = NULL;
       continue;
     }
 
     // end file
     if (tokens->type == TOKEN_END_OF_FILE) {
-      push_array(program->statements, current_root);
+      if (current_root != NULL) {
+        push_array(program->statements, current_root);
+      }
       break;
     }
 

@@ -10,7 +10,6 @@ typedef struct {
 } Object;
 
 typedef struct {
-  size_t item_size;
   size_t length;
   size_t capacity;
   void **items;
@@ -106,7 +105,7 @@ char *read_filepath(const char *filepath);
 
 Array *create_array(void);
 Array *push_array(Array *array, void *item);
-void *get_array_at(Array *array, size_t index);
+void *get_array_item_at(Array *array, size_t index);
 void *pop_array(Array *array);
 
 char *get_token_string(Token *token);
@@ -115,5 +114,6 @@ char *get_node_string(Node *node);
 void print_node_tree(Node *node, int level, const char *prefix);
 char *get_result_string(Result *result);
 void print_result(Result *result);
+void print_program(Program *program);
 
 #endif
