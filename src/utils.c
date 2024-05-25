@@ -4,11 +4,9 @@
 #include <stdlib.h>
 #include <string.h>
 
-bool starts_with(char *a, const char *b) {
+bool starts_with(const char *a, const char *b) {
   return strncmp(a, b, strlen(b)) == 0;
 }
-
-bool exact(char *a, const char *b) { return strncmp(a, b, strlen(b)) == 0; }
 
 char *read_filepath(const char *filepath) {
   FILE *file = fopen(filepath, "r");
@@ -31,7 +29,7 @@ char *read_filepath(const char *filepath) {
   fclose(file);
 
   // null-terminate
-  contents[file_size] = 0;
+  contents[file_size] = '\0';
   return contents;
 }
 

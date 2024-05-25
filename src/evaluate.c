@@ -53,16 +53,16 @@ Result *evaluate_binary_expression(Result *result, char *operator_symbol,
     right_result->number = right_node->number;
   }
 
-  if (exact(operator_symbol, "+")) {
+  if (starts_with(operator_symbol, "+")) {
     result->type = RESULT_NUMBER;
     result->number = left_result->number + right_result->number;
-  } else if (exact(operator_symbol, "-")) {
+  } else if (starts_with(operator_symbol, "-")) {
     result->type = RESULT_NUMBER;
     result->number = left_result->number - right_result->number;
-  } else if (exact(operator_symbol, "*")) {
+  } else if (starts_with(operator_symbol, "*")) {
     result->type = RESULT_NUMBER;
     result->number = left_result->number * right_result->number;
-  } else if (exact(operator_symbol, "/")) {
+  } else if (starts_with(operator_symbol, "/")) {
     result->type = RESULT_NUMBER;
     result->number = left_result->number / right_result->number;
   } else /* modulo */ {

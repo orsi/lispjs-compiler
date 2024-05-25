@@ -49,9 +49,9 @@ bool is_symbol(Token *tokens, const char *operator_symbol) {
 }
 
 int get_operator_precedence(char *s) {
-  if (exact(s, "*") || exact(s, "/") || exact(s, "%%")) {
+  if (starts_with(s, "*") || starts_with(s, "/") || starts_with(s, "%%")) {
     return 2;
-  } else if (exact(s, "+") || exact(s, "-")) {
+  } else if (starts_with(s, "+") || starts_with(s, "-")) {
     return 1;
   } else {
     return 0;
@@ -259,7 +259,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
   char *operator_symbol = get_operator(current_token);
 
   // assignment expression
-  if (current_token->type == TOKEN_SYMBOL && exact(operator_symbol, ":")) {
+  if (current_token->type == TOKEN_SYMBOL && starts_with(operator_symbol, ":")) {
     *tokens = current_token->next;
     Node *node = create_node(NODE_EXPRESSION_ASSIGNMENT, operator_symbol,
                              last_node, parse_expression(tokens, last_node));

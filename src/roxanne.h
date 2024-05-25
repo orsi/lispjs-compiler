@@ -101,8 +101,7 @@ Result *evaluate_binary_expression(Result *result, char *operator_symbol,
 Result *evaluate(Node *node);
 
 // utils
-bool starts_with(char *a, const char *b);
-bool exact(char *a, const char *b);
+bool starts_with(const char *a, const char *b);
 char *read_filepath(const char *filepath);
 
 Array *create_array(void);
