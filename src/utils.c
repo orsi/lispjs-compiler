@@ -85,6 +85,11 @@ char *get_token_string(Token *token) {
   char *token_string = NULL;
   int length;
   switch (token->type) {
+  case TOKEN_STRING_TEMPLATE:
+  case TOKEN_STRING_TEMPLATE_END:
+  case TOKEN_STRING_TEMPLATE_PART_START:
+  case TOKEN_STRING_TEMPLATE_PART_END:
+    break;
   case TOKEN_IDENTIFIER:
     length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
     token_string = malloc(sizeof("token:id, ") + length);
@@ -174,11 +179,11 @@ char *get_node_string(Node *node) {
     length = sprintf(buffer, "node:assignment, %s", node->operator_symbol);
     break;
   case NODE_LITERAL_ARRAY:
-    length = sprintf(buffer, "node:array, length %zu", node->array.length);
+    length = sprintf(buffer, "node:array, length %zu", node->array->length);
     break;
   case NODE_LITERAL_BOOLEAN:
     length =
-        sprintf(buffer, "node:boolean:%s", node->boolean ? "true" : "false");
+        sprintf(buffer, "node:boolean:%s ", node->boolean ? "true" : "false");
     break;
   case NODE_LITERAL_OBJECT:
     length = sprintf(buffer, "node:object");
@@ -190,8 +195,14 @@ char *get_node_string(Node *node) {
     length = sprintf(buffer, "node:number, %.16g", node->number);
     break;
   case (NODE_LITERAL_STRING):
-    length = sprintf(buffer, "node:string, %.*s", node->string.length,
-                     node->string.value);
+    length = sprintf(buffer, "node:string, %.*s", node->string->length,
+                     node->string->value);
+    break;
+  case NODE_LITERAL_STRING_TEMPLATE:
+    length = sprintf(buffer, "node:string template, %s",
+                     get_node_string(get_array_item_at(
+                         node->string_template_parts,
+                         node->string_template_parts->length - 1)));
     break;
   case NODE_STATEMENT_CONDITIONAL:
     length = sprintf(buffer, "node:conditional, %s",

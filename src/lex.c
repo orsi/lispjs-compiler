@@ -4,7 +4,7 @@
 #include <stdlib.h>
 #include <string.h>
 
-Token *create_token(enum TokenType type, char *string, int length) {
+Token *create_token(enum TokenType type, char *string, int length, char *end) {
   Token *token = malloc(sizeof(Token));
   if (token == NULL) {
     printf("Error: malloc token");
@@ -13,145 +13,182 @@ Token *create_token(enum TokenType type, char *string, int length) {
   token->type = type;
   token->value = string;
   token->length = length;
+  token->end = end;
   return token;
 }
 
-Token *lex(char *string) {
-  Token head = {0};
-  Token *current_token = &head;
-
-  while (*string) {
+Token *lex_token(char *start) {
+  while (*start) {
     // comment: single-line
-    if (starts_with(string, "//")) {
-      while (*string && !starts_with(string, "\n")) {
-        string++;
+    if (starts_with(start, "//")) {
+      while (*start && !starts_with(start, "\n")) {
+        start++;
       }
       continue;
     }
 
     // comment: multi-line
-    if (starts_with(string, "/*")) {
-      while (*string && !starts_with(string, "*/")) {
-        string++;
+    if (starts_with(start, "/*")) {
+      while (*start && !starts_with(start, "*/")) {
+        start++;
       }
-      string += 2; // go past last "*/"
+      start += 2; // go past last "*/"
       continue;
     }
 
     // spaces/new-lines
-    if (isspace(string[0])) {
-      while (*string && isspace(string[0])) {
-        string++;
+    if (isspace(start[0])) {
+      while (*start && isspace(start[0])) {
+        start++;
       }
       continue;
     }
 
     // string literal
-    if (starts_with(string, "'") || starts_with(string, "\"")) {
-      char quote = *string;
-      char *start = string + 1;
-      char *current = start;
-      while (*current != quote) {
-        // if string ends before quote, error
-        if (*current == '\0') {
-          printf("error: no matching quote (%c) for: %c%.*s\n", quote, quote,
-                 (int)(current - start), start);
-          exit(1);
-        }
+    if (starts_with(start, "'") || starts_with(start, "\"")) {
+      char quote = *start;
+      char *position = start + 1;
+      char *end = position;
+      Token token_head = {0};
+      Token *token_current = &token_head;
 
-        current++;
+      while (*end && *end != quote) {
+        if (starts_with(end, "${")) {
+          if (token_head.next == NULL) {
+            // create marker for beginning of string template
+            token_current = token_current->next =
+                create_token(TOKEN_STRING_TEMPLATE, position, 0, position);
+          }
+          token_current = token_current->next =
+              create_token(TOKEN_STRING, position, end - position, end);
+          position = end;
+          end += 2; // ${
+          token_current = token_current->next = create_token(
+              TOKEN_STRING_TEMPLATE_PART_START, position, end - position, end);
+          position = end;
+          while (*end && !starts_with(end, "}")) {
+            token_current = token_current->next = lex_token(end);
+            end = token_current->end;
+          }
+          position = end;
+          end += 1; // skip }
+          token_current = token_current->next = create_token(
+              TOKEN_STRING_TEMPLATE_PART_END, position, end - position, end);
+          position = end;
+        } else {
+          end++;
+        }
       }
 
-      int length = current - start;
-      Token *token = create_token(TOKEN_STRING, start, length);
-      current_token = current_token->next = token;
-      string += current_token->length + 2; // +2 for advancing past both quotes
-      continue;
+      if (token_head.next == NULL) {
+        // regular ol' string
+        token_current = token_current->next =
+            create_token(TOKEN_STRING, position, end - position,
+                         end + 1); // end + 1 skips final quote
+      } else {
+        // final string plus end marker for template string
+        token_current = token_current->next =
+            create_token(TOKEN_STRING, position, end - position,
+                         end + 1); // end + 1 skips final quote
+        token_current = token_current->next =
+            create_token(TOKEN_STRING_TEMPLATE_END, end + 1, 0, end + 1);
+      }
+
+      return token_head.next;
     }
 
     // number literal
-    if (isdigit(string[0])) {
-      char *current = string;
-      while (*current && (isdigit(current[0]) || // is digit
-                          (current[0] == '.' &&
-                           isdigit(current[1])) || // is point followed by digit
-                          (current[0] == ',' &&
-                           isdigit(current[1])) || // is comma followed by digit
-                          (current[0] == ' ' &&
-                           isdigit(current[1])))) // is space followed by digit
+    if (isdigit(start[0])) {
+      char *position = start;
+      while (*position &&
+             (isdigit(position[0]) || // is digit
+              (position[0] == '.' &&
+               isdigit(position[1])) || // is point followed by digit
+              (position[0] == ',' &&
+               isdigit(position[1])) || // is comma followed by digit
+              (position[0] == ' ' &&
+               isdigit(position[1])))) // is space followed by digit
       {
-        current++;
+        position++;
       }
 
-      size_t length = current - string;
-      Token *token = create_token(TOKEN_NUMBER, string, length);
-      current_token = current_token->next = token;
-      string += current_token->length;
-      continue;
+      size_t length = position - start;
+      Token *token = create_token(TOKEN_NUMBER, start, length, position);
+      return token;
     }
 
     // binary/hexadecimal/octal literals
-    if (ispunct(string[0]) && string[0] == '#') {
-      char *current = string;
-      current++; // advance past #
-      char baseIndicator = current[0];
-      if (baseIndicator != 'b' && baseIndicator != 'h' &&
-          baseIndicator != 'o') {
+    if (ispunct(start[0]) && start[0] == '#') {
+      char *position = start;
+      position++; // advance past #
+      char baseIndicator = position[0];
+      if (baseIndicator != 'b' && baseIndicator != 'B' &&
+          baseIndicator != 'h' && baseIndicator != 'H' &&
+          baseIndicator != 'o' && baseIndicator != 'O') {
         printf("Error: #%c is not a valid number base", baseIndicator);
         exit(1);
       }
-      current++; // advance past base
+      position++; // advance past base
 
-      while (*current &&
-             (isalnum(current[0]) || // is digit
-              ((current[0] == '.' &&
-                isalnum(current[1])) || // is point followed by digit
-               (current[0] == ',' &&
-                isalnum(current[1])) || // is comma followed by digit
-               (current[0] == ' ' &&
-                isalnum(current[1])) // is space followed by digit
+      while (*position &&
+             (isalnum(position[0]) || // is digit
+              ((position[0] == '.' &&
+                isalnum(position[1])) || // is point followed by digit
+               (position[0] == ',' &&
+                isalnum(position[1])) || // is comma followed by digit
+               (position[0] == ' ' &&
+                isalnum(position[1])) // is space followed by digit
                ))) {
-        current++;
+        position++;
       }
 
-      size_t length = current - string;
+      size_t length = position - start;
       Token *token =
-          create_token(TOKEN_NUMBER_ALTERNATIVE_BASE, string, length);
-      current_token = current_token->next = token;
-      string += current_token->length;
-      continue;
+          create_token(TOKEN_NUMBER_ALTERNATIVE_BASE, start, length, position);
+      return token;
     }
 
     // symbols
-    if (ispunct(string[0])) {
-      current_token = current_token->next =
-          create_token(TOKEN_SYMBOL, string, 1);
-      string++;
-      continue;
+    if (ispunct(start[0])) {
+      Token *token = create_token(TOKEN_SYMBOL, start, 1, start + 1);
+      return token;
     }
 
     // identifier
-    if (isalpha(string[0])) {
-      char *current = string;
+    if (isalpha(start[0])) {
+      char *current = start;
       while (isalnum(*current)) {
         current++;
       }
 
-      int length = current - string;
-
-      Token *token;
-      token = create_token(TOKEN_IDENTIFIER, string, length);
-
-      current_token = current_token->next = token;
-      string += current_token->length;
-      continue;
+      size_t length = current - start;
+      Token *token =
+          create_token(TOKEN_IDENTIFIER, start, length, start + length);
+      return token;
     }
 
-    printf("Error: Cannot lex %s\n", string);
+    printf("Error: could not lex '%c'\n", start[0]);
     exit(1);
   }
 
+  return create_token(TOKEN_END_OF_FILE, start, 0, start);
+}
+
+Token *lex(const char *start) {
+  char *position = (char *)start;
+  Token head = {0};
+  Token *current_token = &head;
+
+  while (*position) {
+    Token *token = lex_token(position);
+    while (token) {
+      current_token = current_token->next = token;
+      position = token->end;
+      token = token->next;
+    }
+  }
+
   current_token = current_token->next =
-      create_token(TOKEN_END_OF_FILE, string, 0);
+      create_token(TOKEN_END_OF_FILE, position, 0, position);
   return head.next;
 }

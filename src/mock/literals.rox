@@ -19,9 +19,9 @@
 // 1) all strings should be template strings
 // 2) all string concatenation is done by inner interpolation, thus no operators
 
-"string"; // string
-"string ${"interpolation"}";  // string interpolation
-"all interpolated values convert at end to string: ${1 + 2 * 3}"; 
+"hello!"; // string
+"result ${1 + 2 * 3} should be ${7} yo"; // string interpolation
+"string ${"interpolation"} wat";  // inner-string interpolation
 
 // boolean
 true;

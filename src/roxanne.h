@@ -26,6 +26,10 @@ enum TokenType {
   TOKEN_NUMBER,
   TOKEN_NUMBER_ALTERNATIVE_BASE,
   TOKEN_STRING,
+  TOKEN_STRING_TEMPLATE,
+  TOKEN_STRING_TEMPLATE_PART_START,
+  TOKEN_STRING_TEMPLATE_PART_END,
+  TOKEN_STRING_TEMPLATE_END,
   TOKEN_SYMBOL,
   TOKEN_END_OF_FILE,
 };
@@ -33,14 +37,15 @@ typedef struct Token Token;
 struct Token {
   enum TokenType type;
   char *value;
+  char *end;
   size_t length;
   int line;
   int column;
   Token *next;
 };
 
-Token *create_token(enum TokenType type, char *string, int length);
-Token *lex(char *input);
+Token *create_token(enum TokenType type, char *start, int length, char *end);
+Token *lex(const char *start);
 
 // parsing
 enum NodeType {
@@ -55,6 +60,7 @@ enum NodeType {
   NODE_LITERAL_NUMBER,
   NODE_LITERAL_OBJECT,
   NODE_LITERAL_STRING,
+  NODE_LITERAL_STRING_TEMPLATE,
 };
 typedef struct Node Node;
 struct Node {
@@ -66,10 +72,11 @@ struct Node {
     char *operator_symbol;
     char *identifier;
     double number;
-    String string;
+    String *string;
     Node *expression;
-    Array array;
-    Object object;
+    Array *array;
+    Array *string_template_parts;
+    Object *object;
   };
 };
 typedef struct {

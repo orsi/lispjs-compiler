@@ -97,7 +97,7 @@ Result *evaluate(Node *node) {
   }
   case NODE_LITERAL_STRING: {
     result->type = RESULT_STRING;
-    result->string = node->string;
+    result->string = *node->string;
     break;
   }
   default: {

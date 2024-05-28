@@ -77,7 +77,7 @@ Node *create_node(enum NodeType type, void *value, Node *left, Node *right) {
     node->operator_symbol = (char *)value;
     break;
   case NODE_LITERAL_ARRAY:
-    node->array = *(Array *)value;
+    node->array = (Array *)value;
     break;
   case NODE_LITERAL_BOOLEAN:
     node->boolean = *(bool *)value;
@@ -86,13 +86,16 @@ Node *create_node(enum NodeType type, void *value, Node *left, Node *right) {
     node->identifier = (char *)value;
     break;
   case NODE_LITERAL_STRING:
-    node->string = *(String *)value;
+    node->string = (String *)value;
+    break;
+  case NODE_LITERAL_STRING_TEMPLATE:
+    node->string_template_parts = (Array *)value;
     break;
   case NODE_LITERAL_NUMBER:
     node->number = *(double *)value;
     break;
   case NODE_LITERAL_OBJECT:
-    node->object = *(Object *)value;
+    node->object = (Object *)value;
     break;
   }
 
@@ -158,6 +161,33 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     value->length = current_token->length;
     value->value = current_token->value;
     Node *node = create_node(NODE_LITERAL_STRING, value, NULL, NULL);
+    *tokens = current_token->next;
+    return node;
+  }
+
+  // literal string interpolation
+  if (current_token->type == TOKEN_STRING_TEMPLATE) {
+    Array *node_template_parts = create_array();
+
+    current_token = current_token->next; // skip template start token
+    while (current_token && current_token->type != TOKEN_STRING_TEMPLATE_END) {
+      if (current_token->type == TOKEN_STRING_TEMPLATE_PART_START) {
+        current_token = current_token->next; // skip template part start token
+        Node *current_root = NULL;
+        while (current_token &&
+               current_token->type != TOKEN_STRING_TEMPLATE_PART_END) {
+          current_root = parse_expression(&current_token, current_root);
+        }
+        push_array(node_template_parts, current_root);
+        current_token = current_token->next; // skip template part end token
+      } else {
+        Node *node_literal_string = parse_expression(&current_token, NULL);
+        push_array(node_template_parts, node_literal_string);
+      }
+    }
+
+    Node *node = create_node(NODE_LITERAL_STRING_TEMPLATE, node_template_parts,
+                             NULL, NULL);
     *tokens = current_token->next;
     return node;
   }
@@ -335,7 +365,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
   exit(1);
 }
 
-Program *parse(Token *tokens) {
+Program *parse(Token *token) {
   Program *program = malloc(sizeof(Program));
   if (program == NULL) {
     printf("Error: cannot malloc program.");
@@ -347,24 +377,24 @@ Program *parse(Token *tokens) {
   Node *current_root = NULL;
 
   // parse statements until end of file
-  while (tokens) {
+  while (token) {
     // statement terminator
-    if (tokens->type == TOKEN_SYMBOL && starts_with(tokens->value, ";")) {
-      tokens = tokens->next;
+    if (token->type == TOKEN_SYMBOL && starts_with(token->value, ";")) {
+      token = token->next;
       push_array(program->statements, current_root);
       current_root = NULL;
       continue;
     }
 
     // end file
-    if (tokens->type == TOKEN_END_OF_FILE) {
+    if (token->type == TOKEN_END_OF_FILE) {
       if (current_root != NULL) {
         push_array(program->statements, current_root);
       }
       break;
     }
 
-    current_root = parse_expression(&tokens, current_root);
+    current_root = parse_expression(&token, current_root);
   }
 
   return program;
