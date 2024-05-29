@@ -92,12 +92,20 @@ Node *parse_expression(Token **tokens, Node *last_node);
 Program *parse(Token *tokens);
 
 // evaluate
-enum ResultType { RESULT_NONE, RESULT_NUMBER, RESULT_STRING };
+enum ResultType {
+  RESULT_NONE,
+  RESULT_ARRAY,
+  RESULT_BOOLEAN,
+  RESULT_NUMBER,
+  RESULT_STRING
+};
 typedef struct {
   enum ResultType type;
   union {
+    bool boolean;
     double number;
     String string;
+    Array array;
   };
 } Result;
 Result *evaluate_assignment_expression(Result *result, Node *left_node,

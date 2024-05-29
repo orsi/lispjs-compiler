@@ -237,19 +237,57 @@ void print_node_tree(Node *node, int level, const char *prefix) {
 }
 
 char *get_result_string(Result *result) {
-  char string[128];
-  int length;
+  char string[500];
+  size_t length = 0;
   switch (result->type) {
+  case (RESULT_ARRAY): {
+    length = sprintf(string, "result:array:[");
+
+    for (size_t i = 0; i < result->array.length; i++) {
+      Node *part = get_array_item_at(&result->array, i);
+      Result *part_result = evaluate(part);
+      if (part_result->type == RESULT_STRING) {
+        length += part_result->string.length + 2;
+        strncat(string, "\"", 1);
+        strncat(string, part_result->string.value, part_result->string.length);
+        strncat(string, "\"", 1);
+      } else if (part_result->type == RESULT_BOOLEAN) {
+        char buffer[128];
+        size_t l =
+            sprintf(buffer, "%s", part_result->boolean ? "true" : "false");
+        length += l;
+        strncat(string, buffer, l);
+      } else {
+        char buffer[128];
+        size_t l = sprintf(buffer, "%g", part_result->number);
+        length += l;
+        strncat(string, buffer, l);
+      }
+
+      if (i < result->array.length - 1) {
+        strncat(string, ", ", 2);
+        length += 2;
+      }
+    }
+    length += 1;
+    strncat(string, "]", 1);
+    break;
+  }
+  case (RESULT_BOOLEAN): {
+    length = sprintf(string, "result:boolean:%s",
+                     result->boolean ? "true" : "false");
+    break;
+  }
   case (RESULT_NONE): {
     length = sprintf(string, "result:none");
     break;
   }
   case (RESULT_NUMBER): {
-    length = sprintf(string, "result:double, %f", result->number);
+    length = sprintf(string, "result:number:%f", result->number);
     break;
   }
   case RESULT_STRING: {
-    length = sprintf(string, "result:string, %.*s", result->string.length,
+    length = sprintf(string, "result:string:\"%.*s\"", result->string.length,
                      result->string.value);
     break;
   }
@@ -264,7 +302,7 @@ char *get_result_string(Result *result) {
   return result_string;
 }
 
-void print_result(Result *result) { printf("%s", get_result_string(result)); }
+void print_result(Result *result) { printf("%s\n", get_result_string(result)); }
 
 void print_program(Program *program) {
   for (size_t i = 0; i < program->statements->length; i++) {

@@ -90,6 +90,16 @@ Result *evaluate(Node *node) {
     evaluate_assignment_expression(result, node->left, node->right);
     break;
   }
+  case NODE_LITERAL_ARRAY: {
+    result->type = RESULT_ARRAY;
+    result->array = *node->array;
+    break;
+  }
+  case NODE_LITERAL_BOOLEAN: {
+    result->type = RESULT_BOOLEAN;
+    result->boolean = node->boolean;
+    break;
+  }
   case (NODE_LITERAL_NUMBER): {
     result->type = RESULT_NUMBER;
     result->number = node->number;
@@ -100,8 +110,50 @@ Result *evaluate(Node *node) {
     result->string = *node->string;
     break;
   }
-  default: {
+  case NODE_LITERAL_STRING_TEMPLATE: {
+    String string = {0};
+    string.length = 0;
+    string.value = malloc(sizeof(char *));
+
+    for (size_t i = 0; i < node->string_template_parts->length; i++) {
+      Node *part = get_array_item_at(node->string_template_parts, i);
+      Result *part_result = evaluate(part);
+      if (part_result->type == RESULT_STRING) {
+        string.length += part_result->string.length;
+        string.value = realloc(string.value, string.length);
+        strncat(string.value, part_result->string.value,
+                part_result->string.length);
+        continue;
+      }
+
+      if (part_result->type == RESULT_BOOLEAN) {
+        char buffer[128];
+        size_t l =
+            sprintf(buffer, "%s", part_result->boolean ? "true" : "false");
+        string.length += l;
+        string.value = realloc(string.value, string.length);
+        strncat(string.value, buffer, l);
+        continue;
+      }
+
+      char buffer[128];
+      size_t l = sprintf(buffer, "%g", part_result->number);
+      string.length += l;
+      string.value = realloc(string.value, string.length);
+      strncat(string.value, buffer, l);
+    }
+
+    result->type = RESULT_STRING;
+    result->string = string;
+    break;
+  }
+  case NODE_EXPRESSION:
+  case NODE_STATEMENT_BLOCK:
+  case NODE_STATEMENT_CONDITIONAL:
+  case NODE_LITERAL_IDENTIFIER:
+  case NODE_LITERAL_OBJECT: {
     result->type = RESULT_NONE;
+    result->string = (String){0, (char *)""};
     break;
   }
   }

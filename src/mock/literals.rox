@@ -36,3 +36,6 @@ false;
     like: 1,
     2: "are great"
 };
+
+// large test
+"crazy ${"this breaks with nested parts ${5}+${6}=${5+6}"} ${87 * 4 / 9} - ${1}+${2}*${3}=${1 + 2 * 3}";

@@ -122,7 +122,53 @@ int main(void) {
                              ->right),
          "node:binary, *");
 
-  // print_program(parse(lex(read_filepath("./src/mock/literals.rox"))));
+  Program *program = parse(lex(read_filepath("./src/mock/literals.rox")));
+  expect(get_result_string(evaluate(get_array_item_at(program->statements, 0))),
+         "result:number:1.000000");
+
+  expect(get_result_string(evaluate(get_array_item_at(program->statements, 1))),
+         "result:number:1.000000");
+
+  expect(get_result_string(evaluate(get_array_item_at(program->statements, 2))),
+         "result:number:10000.000000");
+
+  expect(get_result_string(evaluate(get_array_item_at(program->statements, 3))),
+         "result:number:10000.000000");
+
+  expect(get_result_string(evaluate(get_array_item_at(program->statements, 4))),
+         "result:number:6.000000");
+
+  expect(get_result_string(evaluate(get_array_item_at(program->statements, 5))),
+         "result:number:81985529216486896.000000");
+
+  expect(get_result_string(evaluate(get_array_item_at(program->statements, 6))),
+         "result:number:342391.000000");
+
+  expect(get_result_string(evaluate(get_array_item_at(program->statements, 7))),
+         "result:string:\"hello!\"");
+
+  expect(get_result_string(evaluate(get_array_item_at(program->statements, 8))),
+         "result:string:\"result 7 should be 7 yo\"");
+
+  expect(get_result_string(evaluate(get_array_item_at(program->statements, 9))),
+         "result:string:\"string interpolation wat\"");
+
+  expect(
+      get_result_string(evaluate(get_array_item_at(program->statements, 10))),
+      "result:boolean:true");
+
+  expect(
+      get_result_string(evaluate(get_array_item_at(program->statements, 11))),
+      "result:boolean:false");
+  expect(
+      get_result_string(evaluate(get_array_item_at(program->statements, 12))),
+      "result:array:[1, true, 1, \"hello!\"]");
+  expect(
+      get_result_string(evaluate(get_array_item_at(program->statements, 13))),
+      "result:object:{}");
+  expect(
+      get_result_string(evaluate(get_array_item_at(program->statements, 14))),
+      "result:string:");
 
   print_test_results();
 }
