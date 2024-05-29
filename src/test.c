@@ -122,7 +122,7 @@ int main(void) {
                              ->right),
          "node:binary, *");
 
-  print_program(parse(lex(read_filepath("./src/mock/literals.rox"))));
+  // print_program(parse(lex(read_filepath("./src/mock/literals.rox"))));
 
   print_test_results();
 }

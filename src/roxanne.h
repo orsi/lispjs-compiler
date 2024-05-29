@@ -36,15 +36,15 @@ enum TokenType {
 typedef struct Token Token;
 struct Token {
   enum TokenType type;
-  char *value;
+  char *start;
   char *end;
   size_t length;
-  int line;
-  int column;
+  char *value;
   Token *next;
 };
 
-Token *create_token(enum TokenType type, char *start, int length, char *end);
+Token *create_token(enum TokenType type, char *start, char *end, int length,
+                    char *value);
 Token *lex(const char *start);
 
 // parsing
