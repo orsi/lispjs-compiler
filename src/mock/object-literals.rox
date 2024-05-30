@@ -1,0 +1,12 @@
+{
+    123;
+    "hi";
+    [1;2;"3"];
+};
+
+// object - hashmap
+{
+    arbitrary: "keys";
+    like: 1;
+    hi: "are great";
+};

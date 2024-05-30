@@ -6,10 +6,6 @@
 #include <string.h>
 
 typedef struct {
-  void **keys;
-} Object;
-
-typedef struct {
   size_t length;
   size_t capacity;
   void **items;
@@ -76,7 +72,7 @@ struct Node {
     Node *expression;
     Array *array;
     Array *string_template_parts;
-    Object *object;
+    Array *object;
   };
 };
 typedef struct {
@@ -115,7 +111,9 @@ Result *evaluate_binary_expression(Result *result, char *operator_symbol,
 Result *evaluate(Node *node);
 
 // utils
+char *string_duplicate(char *destination, size_t length);
 bool starts_with(const char *a, const char *b);
+
 char *read_filepath(const char *filepath);
 
 Array *create_array(void);
@@ -123,11 +121,14 @@ Array *push_array(Array *array, void *item);
 void *get_array_item_at(Array *array, size_t index);
 void *pop_array(Array *array);
 
-char *get_token_string(Token *token);
+char *stringify_node_value(Node *node);
+char *stringify_array(Array *array);
+char *stringify_token(Token *token);
+char *stringify_node(Node *node);
+char *stringify_result(Result *result);
+
 void print_tokens(Token *token);
-char *get_node_string(Node *node);
 void print_node_tree(Node *node, int level, const char *prefix);
-char *get_result_string(Result *result);
 void print_result(Result *result);
 void print_program(Program *program);
 

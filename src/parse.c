@@ -95,7 +95,7 @@ Node *create_node(enum NodeType type, void *value, Node *left, Node *right) {
     node->number = *(double *)value;
     break;
   case NODE_LITERAL_OBJECT:
-    node->object = (Object *)value;
+    node->object = (Array *)value;
     break;
   }
 
@@ -196,20 +196,27 @@ Node *parse_expression(Token **tokens, Node *last_node) {
   if (current_token->type == TOKEN_SYMBOL &&
       starts_with(current_token->value, "[")) {
     current_token = current_token->next;
+    Node *root = NULL;
     Array *node_literals = create_array();
-    while (current_token && !starts_with(current_token->value, "]")) {
-      if (current_token->type == TOKEN_END_OF_FILE) {
+    while (current_token) {
+      if (starts_with(current_token->value, "]")) {
+        if (root != NULL) {
+          push_array(node_literals, root);
+          root = NULL;
+        }
         break;
       }
 
       if (current_token->type == TOKEN_SYMBOL &&
-          starts_with(current_token->value, ",")) {
-        // skip
+          starts_with(current_token->value, ";")) {
         current_token = current_token->next;
-      } else {
-        Node *node = parse_expression(&current_token, NULL);
-        push_array(node_literals, node);
+        push_array(node_literals, root);
+        root = NULL;
+        continue;
       }
+
+      Node *node = parse_expression(&current_token, root);
+      root = node;
     }
 
     Node *node = create_node(NODE_LITERAL_ARRAY, node_literals, NULL, NULL);
@@ -222,20 +229,26 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     current_token = current_token->next;
     Node *root = NULL;
     Array *node_assignments = create_array();
-    while (current_token && !starts_with(current_token->value, "}")) {
-      if (current_token->type == TOKEN_END_OF_FILE) {
+    while (current_token) {
+      if (starts_with(current_token->value, "}")) {
+        if (root != NULL) {
+          push_array(node_assignments, root);
+          root = NULL;
+        }
         break;
       }
 
       if (current_token->type == TOKEN_SYMBOL &&
-          starts_with(current_token->value, ",")) {
-        // end of current assignment
+          starts_with(current_token->value, ";")) {
+        // end of current statement
         current_token = current_token->next;
         push_array(node_assignments, root);
-      } else {
-        Node *node = parse_expression(&current_token, root);
-        root = node;
+        root = NULL;
+        continue;
       }
+
+      Node *node = parse_expression(&current_token, root);
+      root = node;
     }
 
     Node *node = create_node(NODE_LITERAL_OBJECT, node_assignments, NULL, NULL);
@@ -361,7 +374,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     }
   }
 
-  printf("Error: Could not parse %s", get_token_string(current_token));
+  printf("Error: Could not parse %s", stringify_token(current_token));
   exit(1);
 }
 
