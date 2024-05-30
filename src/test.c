@@ -160,10 +160,13 @@ int main(void) {
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 12))),
          "result:array:[1, true, 1, \"hello!\"]");
 
-  //   Token *tokens = lex(read_filepath("./src/mock/object-literals.rox"));
-  //   print_tokens(tokens);
-  //   Program *program = parse(tokens);
-  //   print_program(program);
+  printf("\ntokens\n");
+  tokens = lex(read_filepath("./src/mock/object-literals.rox"));
+  print_tokens(tokens);
+
+  printf("\nprogram\n");
+  program = parse(tokens);
+  print_program(program);
 
   print_test_results();
 }

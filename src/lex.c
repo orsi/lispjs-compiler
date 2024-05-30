@@ -112,7 +112,7 @@ Token *lex_token(const char *start) {
         end++;
       }
 
-      size_t length = end - start;
+      size_t length = end - current;
       Token *token = create_token(TOKEN_NUMBER, current, end, length, current);
       return token;
     }

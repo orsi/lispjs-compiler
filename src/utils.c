@@ -390,10 +390,13 @@ char *stringify_result(Result *result) {
 }
 
 void print_tokens(Token *token) {
+  size_t length = 0;
   while (token) {
     printf("%s\n", stringify_token(token));
     token = token->next;
+    length += 1;
   }
+  printf("total: %zu\n", length);
 }
 
 void print_node_tree(Node *node, int level, const char *prefix) {
