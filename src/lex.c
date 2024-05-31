@@ -57,7 +57,7 @@ Token *lex_token(const char *start) {
           if (token_head.next == NULL) {
             // create marker for beginning of string template
             token_current = token_current->next = create_token(
-                TOKEN_STRING_TEMPLATE, position, position, 0, position);
+                TOKEN_STRING_TEMPLATE_START, position, position, 0, position);
           }
           token_current = token_current->next = create_token(
               TOKEN_STRING, position, end, end - position, position);
@@ -68,7 +68,18 @@ Token *lex_token(const char *start) {
                            end - position, position);
           position = end;
           while (*end && !starts_with(end, "}")) {
-            token_current = token_current->next = lex_token(end);
+            Token *token = lex_token(end);
+
+            if (token == NULL) {
+              break;
+            } else {
+              // fast forward to end of parsed tokens
+              while (token) {
+                token_current = token_current->next = token;
+                end = token->end;
+                token = token->next;
+              }
+            }
             end = token_current->end;
           }
           position = end;

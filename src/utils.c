@@ -100,10 +100,25 @@ char *stringify_token(Token *token) {
   char *token_string = NULL;
   int length;
   switch (token->type) {
-  case TOKEN_STRING_TEMPLATE:
+  case TOKEN_STRING_TEMPLATE_START:
+    token_string =
+        string_duplicate(token_string, sizeof("token:string_template_start"));
+    strcpy(token_string, "token:string_template_start");
+    break;
   case TOKEN_STRING_TEMPLATE_END:
+    token_string =
+        string_duplicate(token_string, sizeof("token:string_template_end"));
+    strcpy(token_string, "token:string_template_end");
+    break;
   case TOKEN_STRING_TEMPLATE_PART_START:
+    token_string = string_duplicate(token_string,
+                                    sizeof("token:string_template_part_start"));
+    strcpy(token_string, "token:string_template_part_start");
+    break;
   case TOKEN_STRING_TEMPLATE_PART_END:
+    token_string = string_duplicate(token_string,
+                                    sizeof("token:string_template_part_end"));
+    strcpy(token_string, "token:string_template_part_end");
     break;
   case TOKEN_IDENTIFIER:
     length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);

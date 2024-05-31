@@ -166,7 +166,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
   }
 
   // literal string interpolation
-  if (current_token->type == TOKEN_STRING_TEMPLATE) {
+  if (current_token->type == TOKEN_STRING_TEMPLATE_START) {
     Array *node_template_parts = create_array();
 
     current_token = current_token->next; // skip template start token
@@ -325,7 +325,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
         *tokens = (*tokens)->next; // skip last )
         break;
       }
-      Node *subtree_node = parse_expression(tokens, last_node);
+      Node *subtree_node = parse_expression(tokens, subtree_root);
       subtree_root = subtree_node;
     }
 

@@ -37,7 +37,9 @@ Result *evaluate_binary_expression(Result *result, char *operator_symbol,
   }
 
   // get left and right values
-  if (left_node->type == NODE_EXPRESSION_BINARY) {
+  if (left_node->type == NODE_EXPRESSION) {
+    left_result = evaluate(left_node->expression);
+  } else if (left_node->type == NODE_EXPRESSION_BINARY) {
     evaluate_binary_expression(left_result, left_node->operator_symbol,
                                left_node->left, left_node->right);
   } else if (left_node->type == NODE_LITERAL_NUMBER) {
@@ -45,7 +47,9 @@ Result *evaluate_binary_expression(Result *result, char *operator_symbol,
     left_result->number = left_node->number;
   }
 
-  if (right_node->type == NODE_EXPRESSION_BINARY) {
+  if (right_node->type == NODE_EXPRESSION) {
+    right_result = evaluate(right_node->expression);
+  } else if (right_node->type == NODE_EXPRESSION_BINARY) {
     evaluate_binary_expression(right_result, right_node->operator_symbol,
                                right_node->left, right_node->right);
   } else if (right_node->type == NODE_LITERAL_NUMBER) {
@@ -81,6 +85,10 @@ Result *evaluate(Node *node) {
   }
 
   switch (node->type) {
+  case NODE_EXPRESSION: {
+    result = evaluate(node->expression);
+    break;
+  }
   case (NODE_EXPRESSION_BINARY): {
     evaluate_binary_expression(result, node->operator_symbol, node->left,
                                node->right);
@@ -147,7 +155,6 @@ Result *evaluate(Node *node) {
     result->string = string;
     break;
   }
-  case NODE_EXPRESSION:
   case NODE_STATEMENT_BLOCK:
   case NODE_STATEMENT_CONDITIONAL:
   case NODE_LITERAL_IDENTIFIER:
