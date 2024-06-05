@@ -12,7 +12,7 @@ char *string_duplicate(char *destination, size_t length) {
   }
 
   if (destination == NULL) {
-    printf("Can't malloc destination");
+    printf("Can't malloc destination\n");
     exit(1);
   }
 
@@ -51,14 +51,14 @@ char *read_filepath(const char *filepath) {
 Array *create_array(void) {
   Array *array = malloc(sizeof(Array));
   if (array == NULL) {
-    printf("Could not malloc array.");
+    printf("Could not malloc array.\n");
     exit(1);
   }
   array->capacity = 5;
   array->length = 0;
   array->items = malloc(sizeof(void *) * array->capacity);
   if (array->items == NULL) {
-    printf("Could not malloc array->items.");
+    printf("Could not malloc array->items.\n");
     exit(1);
   }
   return array;
@@ -77,7 +77,7 @@ Array *push_array(Array *array, void *item) {
     array->capacity *= 2;
     array->items = realloc(array->items, sizeof(void *) * array->capacity);
     if (array->items == NULL) {
-      printf("Could not realloc array->items");
+      printf("Could not realloc array->items\n");
       exit(1);
     }
   }
@@ -124,7 +124,7 @@ char *stringify_token(Token *token) {
     length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
     token_string = malloc(sizeof("token:id:") + length);
     if (token_string == NULL) {
-      printf("Error: malloc token_string");
+      printf("Error: malloc token_string\n");
       exit(1);
     }
     sprintf(token_string, "token:id:%.*s", (int)token->length, token->value);
@@ -133,7 +133,7 @@ char *stringify_token(Token *token) {
     length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
     token_string = malloc(sizeof("token:number:") + length);
     if (token_string == NULL) {
-      printf("Error: malloc token_string");
+      printf("Error: malloc token_string\n");
       exit(1);
     }
     sprintf(token_string, "token:number:%.*s", (int)token->length,
@@ -143,7 +143,7 @@ char *stringify_token(Token *token) {
     length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
     token_string = malloc(sizeof("token:number_alternative_base:") + length);
     if (token_string == NULL) {
-      printf("Error: malloc token_string");
+      printf("Error: malloc token_string\n");
       exit(1);
     }
     sprintf(token_string, "token:number:%.*s", (int)token->length,
@@ -153,7 +153,7 @@ char *stringify_token(Token *token) {
     length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
     token_string = malloc(sizeof("token:string:") + length);
     if (token_string == NULL) {
-      printf("Error: malloc token_string");
+      printf("Error: malloc token_string\n");
       exit(1);
     }
     sprintf(token_string, "token:string:%.*s", (int)token->length,
@@ -163,7 +163,7 @@ char *stringify_token(Token *token) {
     length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
     token_string = malloc(sizeof("token:symbol:") + length);
     if (token_string == NULL) {
-      printf("Error: malloc token_string");
+      printf("Error: malloc token_string\n");
       exit(1);
     }
     sprintf(token_string, "token:symbol:%.*s", (int)token->length,
@@ -172,7 +172,7 @@ char *stringify_token(Token *token) {
   case TOKEN_END_OF_FILE:
     token_string = malloc(sizeof("token:eof"));
     if (token_string == NULL) {
-      printf("Error: malloc token_string");
+      printf("Error: malloc token_string\n");
       exit(1);
     }
     strcpy(token_string, "token:eof");
@@ -206,7 +206,9 @@ char *stringify_array(Array *array) {
 
 char *stringify_node_value(Node *node) {
   size_t length = 0;
-  char *destination = {0};
+  char *destination = malloc(0);
+  strcpy(destination, "");
+
   if (node->type == NODE_LITERAL_ARRAY) {
     char *array_items_string = stringify_array(node->array);
     length += strlen(array_items_string) + 2;
@@ -397,7 +399,7 @@ char *stringify_result(Result *result) {
 
   char *result_string = malloc(length);
   if (result_string == NULL) {
-    printf("Error: malloc result_string");
+    printf("Error: malloc result_string\n");
     exit(1);
   }
   memcpy(result_string, string, length);

@@ -5,18 +5,18 @@ static int TESTS_TOTAL = 0;
 static int TESTS_PASSED = 0;
 static int TESTS_FAILED = 0;
 
-#define expect(actual, expected) _expect(actual, expected)
+#define expect(actual, expected) _expect(actual, expected, __LINE__)
 
-void _expect(const char *actual, const char *expected) {
+void _expect(const char *actual, const char *expected, int line) {
   TESTS_TOTAL++;
   if (strcmp(expected, actual) == 0) {
     TESTS_PASSED++;
-    printf("%-3d \x1b[32m✔ Passed\x1b[0m %s \x1b[44m %.*s \x1b[0m\n",
-           TESTS_TOTAL, expected, (int)strlen(actual), actual);
+    printf("%-3d (line: %d) \x1b[32m✔ Passed\x1b[0m %s \x1b[44m %.*s \x1b[0m\n",
+           TESTS_TOTAL, line, expected, (int)strlen(actual), actual);
   } else {
     TESTS_FAILED++;
-    printf("%-3d \x1b[31m✖ Failed\x1b[0m %s \x1b[44m %.*s \x1b[0m\n",
-           TESTS_TOTAL, expected, (int)strlen(actual), actual);
+    printf("%-3d (line: %d) \x1b[31m✖ Failed\x1b[0m %s \x1b[44m %.*s \x1b[0m\n",
+           TESTS_TOTAL, line, expected, (int)strlen(actual), actual);
   }
 }
 

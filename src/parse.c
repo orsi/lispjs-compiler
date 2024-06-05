@@ -61,7 +61,7 @@ int get_operator_precedence(char *s) {
 Node *create_node(enum NodeType type, void *value, Node *left, Node *right) {
   Node *node = malloc(sizeof(Node));
   if (node == NULL) {
-    printf("Error malloc node.");
+    printf("Error malloc node.\n");
     exit(1);
   }
 
@@ -155,7 +155,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
   if (current_token->type == TOKEN_STRING) {
     String *value = malloc(sizeof(String));
     if (value == NULL) {
-      printf("Error: cannot malloc value");
+      printf("Error: cannot malloc value\n");
       exit(1);
     }
     value->length = current_token->length;
@@ -306,7 +306,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     size_t size = current_token->length + 1;
     char *value = malloc(sizeof(char *) * size);
     if (value == NULL) {
-      printf("Error: cannot malloc value");
+      printf("Error: cannot malloc value\n");
       exit(1);
     }
     value = strncpy(value, current_token->value, current_token->length);
@@ -374,14 +374,14 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     }
   }
 
-  printf("Error: Could not parse %s", stringify_token(current_token));
+  printf("Error: Could not parse %s\n", stringify_token(current_token));
   exit(1);
 }
 
 Program *parse(Token *token) {
   Program *program = malloc(sizeof(Program));
   if (program == NULL) {
-    printf("Error: cannot malloc program.");
+    printf("Error: cannot malloc program.\n");
     exit(1);
   }
   program->statements = create_array();

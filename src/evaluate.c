@@ -7,7 +7,7 @@ Result *evaluate_assignment_expression(Result *result, Node *left_node,
                                        Node *right_node) {
   Result *right_result = malloc(sizeof(Result));
   if (right_result == NULL) {
-    printf("Error: malloc right_result");
+    printf("Error: malloc right_result\n");
     exit(1);
   }
 
@@ -27,12 +27,12 @@ Result *evaluate_binary_expression(Result *result, char *operator_symbol,
                                    Node *left_node, Node *right_node) {
   Result *left_result = malloc(sizeof(Result));
   if (left_result == NULL) {
-    printf("Error: malloc left_result");
+    printf("Error: malloc left_result\n");
     exit(1);
   }
   Result *right_result = malloc(sizeof(Result));
   if (right_result == NULL) {
-    printf("Error: malloc right_result");
+    printf("Error: malloc right_result\n");
     exit(1);
   }
 
@@ -80,7 +80,7 @@ Result *evaluate_binary_expression(Result *result, char *operator_symbol,
 Result *evaluate(Node *node) {
   Result *result = malloc(sizeof(Result));
   if (result == NULL) {
-    printf("Error: malloc result");
+    printf("Error: malloc result\n");
     exit(1);
   }
 

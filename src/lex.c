@@ -8,7 +8,7 @@ Token *create_token(enum TokenType type, char *start, char *end, int length,
                     char *value) {
   Token *token = malloc(sizeof(Token));
   if (token == NULL) {
-    printf("Error: malloc token");
+    printf("Error: malloc token\n");
     exit(1);
   }
   *token = (Token){type, start, end, length, value, NULL};
@@ -136,7 +136,7 @@ Token *lex_token(const char *start) {
       if (baseIndicator != 'b' && baseIndicator != 'B' &&
           baseIndicator != 'h' && baseIndicator != 'H' &&
           baseIndicator != 'o' && baseIndicator != 'O') {
-        printf("Error: #%c is not a valid number base", baseIndicator);
+        printf("Error: #%c is not a valid number base\n", baseIndicator);
         exit(1);
       }
       end++; // advance past base
