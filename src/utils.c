@@ -219,6 +219,40 @@ char *stringify_node_value(Node *node) {
   } else if (node->type == NODE_LITERAL_BOOLEAN) {
     destination = string_duplicate(destination, node->boolean ? 4 : 5);
     strcat(destination, node->boolean ? "true" : "false");
+  } else if (node->type == NODE_LITERAL_FUNCTION) {
+    length += 1;
+    destination = string_duplicate(destination, length);
+    strcat(destination, "(");
+
+    Node *parameters = node->function->parameters;
+    if (parameters == NULL) {
+      length += 1;
+      destination = string_duplicate(destination, length);
+      strcat(destination, ")");
+      return destination;
+    }
+
+    Node *expressions = parameters->expression;
+    if (expressions == NULL) {
+      length += 1;
+      destination = string_duplicate(destination, length);
+      strcat(destination, ")");
+      return destination;
+    }
+
+    Array *statements = expressions->statements;
+    if (statements == NULL) {
+      length += 1;
+      destination = string_duplicate(destination, length);
+      strcat(destination, ")");
+      return destination;
+    }
+
+    char *parameters_string = stringify_array(statements); // risky access!
+    length += strlen(parameters_string) + 1;
+    destination = string_duplicate(destination, length);
+    strcat(destination, parameters_string);
+    strcat(destination, ")");
   } else if (node->type == NODE_LITERAL_OBJECT) {
     char *object_items_string = stringify_array(node->object);
     length += strlen(object_items_string) + 2;
@@ -274,6 +308,11 @@ char *stringify_node_value(Node *node) {
     if (right_value_string != NULL) {
       strcat(destination, right_value_string);
     }
+  } else if (node->type == NODE_STATEMENT_MULTI) {
+    char *statements_items_string = stringify_array(node->statements);
+    length += strlen(statements_items_string);
+    destination = string_duplicate(destination, length);
+    strcat(destination, statements_items_string);
   } else {
     char buf[128];
     size_t number_length = sprintf(buf, "%.16g", node->number);
@@ -316,6 +355,9 @@ char *stringify_node(Node *node) {
   case (NODE_LITERAL_IDENTIFIER):
     length = sprintf(buffer, "node:identifier:%s", stringify_node_value(node));
     break;
+  case (NODE_LITERAL_FUNCTION):
+    length = sprintf(buffer, "node:function:%s", stringify_node_value(node));
+    break;
   case (NODE_LITERAL_NUMBER):
     length = sprintf(buffer, "node:number:%s", stringify_node_value(node));
     break;
@@ -332,6 +374,9 @@ char *stringify_node(Node *node) {
   case NODE_STATEMENT_BLOCK:
     length = sprintf(buffer, "node:block:%s",
                      stringify_node_value(node->expression));
+    break;
+  case (NODE_STATEMENT_MULTI):
+    length = sprintf(buffer, "node:multi:%s", stringify_node_value(node));
     break;
   }
   char *node_string = {0};

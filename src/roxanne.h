@@ -44,21 +44,27 @@ Token *create_token(enum TokenType type, char *start, char *end, int length,
 Token *lex(const char *start);
 
 // parsing
+typedef struct Node Node;
+typedef struct {
+  Node *parameters;
+  Node *block;
+} Function;
 enum NodeType {
   NODE_EXPRESSION,
   NODE_EXPRESSION_ASSIGNMENT,
   NODE_EXPRESSION_BINARY,
+  NODE_STATEMENT_MULTI,
   NODE_STATEMENT_BLOCK,
   NODE_STATEMENT_CONDITIONAL,
   NODE_LITERAL_ARRAY,
   NODE_LITERAL_BOOLEAN,
+  NODE_LITERAL_FUNCTION,
   NODE_LITERAL_IDENTIFIER,
   NODE_LITERAL_NUMBER,
   NODE_LITERAL_OBJECT,
   NODE_LITERAL_STRING,
   NODE_LITERAL_STRING_TEMPLATE,
 };
-typedef struct Node Node;
 struct Node {
   enum NodeType type;
   Node *left;
@@ -70,8 +76,10 @@ struct Node {
     double number;
     String *string;
     Node *expression;
+    Function *function;
     Array *array;
     Array *string_template_parts;
+    Array *statements;
     Array *object;
   };
 };
@@ -80,7 +88,6 @@ typedef struct {
 } Program;
 
 int is_keyword(char *word, int length);
-bool is_symbol(Token *tokens, const char *operator_symbol);
 char *get_operator(Token *tokens);
 Node *create_node(enum NodeType type, void *value, Node *left, Node *right);
 int get_operator_precedence(char *s);

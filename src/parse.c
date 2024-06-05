@@ -34,20 +34,6 @@ char *get_operator(Token *tokens) {
   return operator_symbol;
 }
 
-bool is_symbol(Token *tokens, const char *operator_symbol) {
-  size_t length = strlen(operator_symbol);
-  Token *current_token = tokens;
-
-  for (size_t i = 0; i < length; i++) {
-    if (current_token->value[0] != operator_symbol[i]) {
-      return false;
-    }
-    current_token = tokens->next;
-  }
-
-  return true;
-}
-
 int get_operator_precedence(char *s) {
   if (starts_with(s, "*") || starts_with(s, "/") || starts_with(s, "%%")) {
     return 2;
@@ -82,6 +68,9 @@ Node *create_node(enum NodeType type, void *value, Node *left, Node *right) {
   case NODE_LITERAL_BOOLEAN:
     node->boolean = *(bool *)value;
     break;
+  case NODE_LITERAL_FUNCTION:
+    node->function = (Function *)value;
+    break;
   case NODE_LITERAL_IDENTIFIER:
     node->identifier = (char *)value;
     break;
@@ -96,6 +85,9 @@ Node *create_node(enum NodeType type, void *value, Node *left, Node *right) {
     break;
   case NODE_LITERAL_OBJECT:
     node->object = (Array *)value;
+    break;
+  case NODE_STATEMENT_MULTI:
+    node->statements = (Array *)value;
     break;
   }
 
@@ -208,7 +200,8 @@ Node *parse_expression(Token **tokens, Node *last_node) {
       }
 
       if (current_token->type == TOKEN_SYMBOL &&
-          starts_with(current_token->value, ";")) {
+          (starts_with(current_token->value, ";") ||
+           starts_with(current_token->value, ","))) {
         current_token = current_token->next;
         push_array(node_literals, root);
         root = NULL;
@@ -225,7 +218,8 @@ Node *parse_expression(Token **tokens, Node *last_node) {
   }
 
   // literal object
-  if (current_token->type == TOKEN_SYMBOL && is_symbol(current_token, "{")) {
+  if (current_token->type == TOKEN_SYMBOL &&
+      starts_with(current_token->value, "{")) {
     current_token = current_token->next;
     Node *root = NULL;
     Array *node_assignments = create_array();
@@ -317,7 +311,8 @@ Node *parse_expression(Token **tokens, Node *last_node) {
   }
 
   // expression sub-tree
-  if (current_token->type == TOKEN_SYMBOL && is_symbol(current_token, "(")) {
+  if (current_token->type == TOKEN_SYMBOL &&
+      starts_with(current_token->value, "(")) {
     *tokens = current_token->next;
     Node *subtree_root = NULL;
     while (*tokens) {
@@ -344,13 +339,63 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     return node;
   }
 
-  // TODO: ?
-  // unary expression
-  // if (current_token->type == TOKEN_SYMBOL && last_node == NULL) {
-  // }
+  // elision
+  if (current_token->type == TOKEN_SYMBOL &&
+      starts_with(current_token->value, ",")) {
+
+    Array *statements = create_array();
+    push_array(statements, last_node);
+
+    *tokens = current_token->next;
+    Node *root = NULL;
+    while (*tokens) {
+      current_token = *tokens;
+      if (current_token->type == TOKEN_SYMBOL &&
+          (starts_with((*tokens)->value, ";") ||
+           starts_with((*tokens)->value, ")"))) {
+        push_array(statements, root);
+        break;
+      }
+
+      if (current_token->type == TOKEN_SYMBOL &&
+          starts_with(current_token->value, ",")) {
+        push_array(statements, root);
+        continue;
+      }
+
+      root = parse_expression(tokens, root);
+    }
+
+    Node *node = create_node(NODE_STATEMENT_MULTI, statements, NULL, NULL);
+    return node;
+  }
+
+  // function
+  if (current_token->type == TOKEN_SYMBOL &&
+      starts_with(current_token->value, "=>") &&
+      last_node->type == NODE_EXPRESSION) {
+    *tokens = (*tokens)->next; // skip =
+    *tokens = (*tokens)->next; // skip >
+
+    Node *block = parse_expression(tokens, NULL);
+    Function *function = malloc(sizeof(*function));
+    function->parameters = last_node;
+    function->block = block;
+    Node *node = create_node(NODE_LITERAL_FUNCTION, function, NULL, NULL);
+    return node;
+  }
 
   // binary expression
-  if (current_token->type == TOKEN_SYMBOL) {
+  if (current_token->type == TOKEN_SYMBOL &&
+      (starts_with(current_token->value, "+") ||
+       starts_with(current_token->value, "-") ||
+       starts_with(current_token->value, "/") ||
+       starts_with(current_token->value, "*") ||
+       starts_with(current_token->value, "%%") ||
+       starts_with(current_token->value, "<") ||
+       starts_with(current_token->value, ">") ||
+       starts_with(current_token->value, "<=") ||
+       starts_with(current_token->value, ">="))) {
     if (last_node != NULL && last_node->type == NODE_EXPRESSION_BINARY &&
         get_operator_precedence(last_node->operator_symbol) <
             get_operator_precedence(current_token->value)) {

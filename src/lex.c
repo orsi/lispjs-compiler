@@ -111,7 +111,7 @@ Token *lex_token(const char *start) {
     }
 
     // number literal
-    if (isdigit(current[0])) {
+    if (isdigit(current[0]) || (current[0] == '.' && isdigit(current[1]))) {
       char *end = current;
       while (
           *end &&
