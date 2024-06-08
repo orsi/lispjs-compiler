@@ -42,11 +42,8 @@ void print_test_results(void) {
   printf("Failed:\t\x1b[31m%d\x1b[0m\n\n", TESTS_FAILED);
 }
 
-int main(void) {
+void test_lex(void) {
   Token *tokens;
-  Program *program;
-
-  // lexer tests
   expect(stringify_token(lex("// don't parse me!\n// or me!")), "token:eof");
   expect(stringify_token(lex("123.123")), "token:number:123.123");
   expect(stringify_token(lex("\"hi\"")), "token:string:hi");
@@ -65,8 +62,9 @@ int main(void) {
     tokens = tokens->next;
   }
   expect(stringify_token(last_token), "token:eof");
+}
 
-  // parse tests
+void test_parse(void) {
   expect(stringify_node(get_array_item_at(parse(lex("1"))->statements, 0)),
          "node:number:1");
   expect(stringify_node(get_array_item_at(parse(lex("1.0"))->statements, 0)),
@@ -123,46 +121,46 @@ int main(void) {
                              parse(lex(("1 + 2 * 3")))->statements, 0))
                             ->right),
          "node:binary:2*3");
+}
 
+void test_evaluate(void) {
+  Program *program;
   program = parse(lex(read_filepath("./src/mock/literals.rox")));
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 0))),
          "result:number:1.000000");
-
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 1))),
          "result:number:1.000000");
-
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 2))),
          "result:number:10000.000000");
-
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 3))),
          "result:number:10000.000000");
-
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 4))),
          "result:number:6.000000");
-
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 5))),
          "result:number:81985529216486896.000000");
-
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 6))),
          "result:number:342391.000000");
-
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 7))),
          "result:string:\"hello!\"");
-
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 8))),
          "result:string:\"result 7 should be 7 yo\"");
-
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 9))),
          "result:string:\"string interpolation wat\"");
-
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 10))),
          "result:boolean:true");
-
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 11))),
          "result:boolean:false");
   expect(stringify_result(evaluate(get_array_item_at(program->statements, 12))),
          "result:array:[1, true, 1, \"hello!\"]");
+}
 
+int main(void) {
+  test_lex();
+  test_parse();
+  test_evaluate();
+  
+  Token *tokens;
+  Program *program;
   tokens = lex(read_filepath("./src/mock/object-literals.rox"));
   printf("\nprogram\n");
   program = parse(tokens);

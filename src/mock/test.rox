@@ -1,0 +1,21 @@
+import "https://www.google.com";
+
+a: 1;
+b: 2;
+result: a + b;
+
+add(a, b): {
+    return a + b;
+}
+
+subtract(a, b): a - b;
+
+conditionalResult: if result > 5 {
+    // comment
+    return "greater than 5!";
+} else {
+    return "less then 5 :(";
+}
+
+
+export conditionalResult;
