@@ -465,20 +465,14 @@ void print_node_tree(Node *node, int level, const char *prefix) {
   int indent = level * 2;
   printf("%*s└ %s%s\n", indent, "", prefix, stringify_node(node));
 
-  if (node->left != NULL) {
-    print_node_tree(node->left, level + 1, "l: ");
-  }
-
-  if (node->right != NULL) {
-    print_node_tree(node->right, level + 1, "r: ");
-  }
 }
 
 void print_result(Result *result) { printf("%s\n", stringify_result(result)); }
 
-void print_program(Program *program) {
-  for (size_t i = 0; i < program->statements->length; i++) {
-    Node *node = get_array_item_at(program->statements, i);
-    print_node_tree(node, 0, " ");
+void print_program(Node *node_program) {
+  Node *current = node_program->body;
+  while (current) {
+    print_node_tree(current, 0, " ");
+    current = current->next;
   }
 }

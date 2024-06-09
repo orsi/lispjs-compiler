@@ -44,7 +44,7 @@ int get_operator_precedence(char *s) {
   }
 }
 
-Node *create_node(enum NodeType type, void *value, Node *left, Node *right) {
+Node *create_node(enum NodeType type, void *value) {
   Node *node = malloc(sizeof(Node));
   if (node == NULL) {
     printf("Error malloc node.\n");
@@ -55,48 +55,86 @@ Node *create_node(enum NodeType type, void *value, Node *left, Node *right) {
   switch (node->type) {
   case NODE_EXPRESSION:
   case NODE_STATEMENT_BLOCK:
-  case NODE_STATEMENT_CONDITIONAL:
-    node->expression = (Node *)value;
+  case NODE_STATEMENT_CONDITIONAL: {
+    NodeConditional *conditional = value;
+    node->expression = conditional->expression;
+    node->if_then = conditional->if_then;
+    node->if_else = conditional->if_else;
     break;
+  }
   case NODE_EXPRESSION_ASSIGNMENT:
-  case NODE_EXPRESSION_BINARY:
-    node->operator_symbol = (char *)value;
+  case NODE_EXPRESSION_BINARY: {
+    NodeBinary *expression = value;
+    node->operator_symbol = expression->operator_symbol;
+    node->left = expression->left;
+    node->right = expression->right;
     break;
+  }
   case NODE_LITERAL_ARRAY:
-    node->array = (Array *)value;
+    node->array = value;
     break;
   case NODE_LITERAL_BOOLEAN:
     node->boolean = *(bool *)value;
     break;
   case NODE_LITERAL_FUNCTION:
-    node->function = (Function *)value;
+    node->function = value;
     break;
   case NODE_LITERAL_IDENTIFIER:
-    node->identifier = (char *)value;
+    node->identifier = value;
     break;
   case NODE_LITERAL_STRING:
-    node->string = (String *)value;
+    node->string = value;
     break;
   case NODE_LITERAL_STRING_TEMPLATE:
-    node->string_template_parts = (Array *)value;
+    node->string_template_parts = value;
     break;
   case NODE_LITERAL_NUMBER:
     node->number = *(double *)value;
     break;
   case NODE_LITERAL_OBJECT:
-    node->object = (Array *)value;
+    node->object = value;
+    break;
+  case NODE_PROGRAM:
+    node->body = (Node *)value;
     break;
   case NODE_STATEMENT_MULTI:
-    node->statements = (Array *)value;
+    node->statements = value;
     break;
   }
 
-  node->left = left;
-  node->right = right;
   return node;
 }
 
-Node *parse_expression(Token **tokens, Node *last_node) {
+Node *parse_program(Token *token) {
+  Node head = {0};
+  Node *current = &head;
+  Node *root = NULL;
+
+  while (token) {
+    // end file
+    if (token->type == TOKEN_END_OF_FILE) {
+      if (root != NULL) {
+        current = current->next = root;
+      }
+      break;
+    }
+
+    // statement terminator
+    if (token->type == TOKEN_SYMBOL && starts_with(token->value, ";")) {
+      current = current->next = root;
+      root = NULL;
+      token = token->next;
+      continue;
+    }
+
+    root = parse(&token, root);
+  }
+
+  Node *node_program = create_node(NODE_PROGRAM, head.next);
+  return node_program;
+}
+
+Node *parse(Token **tokens, Node *last_node) {
   Token *current_token = *tokens;
 
   // literal number
@@ -114,7 +152,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     }
     normalizedNumber[i] = '\0';
     double value = atof(normalizedNumber);
-    Node *node = create_node(NODE_LITERAL_NUMBER, &value, NULL, NULL);
+    Node *node = create_node(NODE_LITERAL_NUMBER, &value);
     *tokens = current_token->next;
     return node;
   }
@@ -138,7 +176,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     }
     normalizedNumber[i] = '\0';
     double value = strtol(normalizedNumber, NULL, base);
-    Node *node = create_node(NODE_LITERAL_NUMBER, &value, NULL, NULL);
+    Node *node = create_node(NODE_LITERAL_NUMBER, &value);
     *tokens = current_token->next;
     return node;
   }
@@ -152,7 +190,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     }
     value->length = current_token->length;
     value->value = current_token->value;
-    Node *node = create_node(NODE_LITERAL_STRING, value, NULL, NULL);
+    Node *node = create_node(NODE_LITERAL_STRING, value);
     *tokens = current_token->next;
     return node;
   }
@@ -168,18 +206,17 @@ Node *parse_expression(Token **tokens, Node *last_node) {
         Node *current_root = NULL;
         while (current_token &&
                current_token->type != TOKEN_STRING_TEMPLATE_PART_END) {
-          current_root = parse_expression(&current_token, current_root);
+          current_root = parse(&current_token, current_root);
         }
         push_array(node_template_parts, current_root);
         current_token = current_token->next; // skip template part end token
       } else {
-        Node *node_literal_string = parse_expression(&current_token, NULL);
+        Node *node_literal_string = parse(&current_token, NULL);
         push_array(node_template_parts, node_literal_string);
       }
     }
 
-    Node *node = create_node(NODE_LITERAL_STRING_TEMPLATE, node_template_parts,
-                             NULL, NULL);
+    Node *node = create_node(NODE_LITERAL_STRING_TEMPLATE, node_template_parts);
     *tokens = current_token->next;
     return node;
   }
@@ -208,11 +245,11 @@ Node *parse_expression(Token **tokens, Node *last_node) {
         continue;
       }
 
-      Node *node = parse_expression(&current_token, root);
+      Node *node = parse(&current_token, root);
       root = node;
     }
 
-    Node *node = create_node(NODE_LITERAL_ARRAY, node_literals, NULL, NULL);
+    Node *node = create_node(NODE_LITERAL_ARRAY, node_literals);
     *tokens = current_token->next;
     return node;
   }
@@ -241,11 +278,11 @@ Node *parse_expression(Token **tokens, Node *last_node) {
         continue;
       }
 
-      Node *node = parse_expression(&current_token, root);
+      Node *node = parse(&current_token, root);
       root = node;
     }
 
-    Node *node = create_node(NODE_LITERAL_OBJECT, node_assignments, NULL, NULL);
+    Node *node = create_node(NODE_LITERAL_OBJECT, node_assignments);
     *tokens = current_token->next;
     return node;
   }
@@ -254,7 +291,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
   if (current_token->type == TOKEN_IDENTIFIER &&
       starts_with(current_token->value, "true")) {
     bool value = true;
-    Node *node = create_node(NODE_LITERAL_BOOLEAN, &value, NULL, NULL);
+    Node *node = create_node(NODE_LITERAL_BOOLEAN, &value);
     *tokens = current_token->next;
     return node;
   }
@@ -263,7 +300,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
   if (current_token->type == TOKEN_IDENTIFIER &&
       starts_with(current_token->value, "false")) {
     bool value = false;
-    Node *node = create_node(NODE_LITERAL_BOOLEAN, &value, NULL, NULL);
+    Node *node = create_node(NODE_LITERAL_BOOLEAN, &value);
     *tokens = current_token->next;
     return node;
   }
@@ -274,12 +311,12 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     *tokens = current_token->next;
     Node *condition_root = NULL;
     while (*tokens && (*tokens)->value[0] != '{') {
-      Node *condition_node = parse_expression(tokens, NULL);
+      Node *condition_node = parse(tokens, NULL);
       condition_root = condition_node;
     }
-    Node *node = create_node(NODE_STATEMENT_CONDITIONAL, condition_root,
-                             parse_expression(tokens, last_node),
-                             parse_expression(tokens, last_node));
+    NodeConditional value = {condition_root, parse(tokens, last_node),
+                             parse(tokens, last_node)};
+    Node *node = create_node(NODE_STATEMENT_CONDITIONAL, &value);
     return node;
   }
 
@@ -292,7 +329,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     while (*tokens && (*tokens)->value[0] != '{') {
       *tokens = (*tokens)->next;
     }
-    return parse_expression(tokens, last_node);
+    return parse(tokens, last_node);
   }
 
   // identifier
@@ -305,7 +342,7 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     }
     value = strncpy(value, current_token->value, current_token->length);
     value[size] = '\0';
-    Node *node = create_node(NODE_LITERAL_IDENTIFIER, value, NULL, NULL);
+    Node *node = create_node(NODE_LITERAL_IDENTIFIER, value);
     *tokens = current_token->next;
     return node;
   }
@@ -320,11 +357,11 @@ Node *parse_expression(Token **tokens, Node *last_node) {
         *tokens = (*tokens)->next; // skip last )
         break;
       }
-      Node *subtree_node = parse_expression(tokens, subtree_root);
+      Node *subtree_node = parse(tokens, subtree_root);
       subtree_root = subtree_node;
     }
 
-    Node *node = create_node(NODE_EXPRESSION, subtree_root, NULL, NULL);
+    Node *node = create_node(NODE_EXPRESSION, subtree_root);
     return node;
   }
 
@@ -334,8 +371,10 @@ Node *parse_expression(Token **tokens, Node *last_node) {
   if (current_token->type == TOKEN_SYMBOL &&
       starts_with(operator_symbol, ":")) {
     *tokens = current_token->next;
-    Node *node = create_node(NODE_EXPRESSION_ASSIGNMENT, operator_symbol,
-                             last_node, parse_expression(tokens, last_node));
+    NodeBinary value = {.operator_symbol = operator_symbol,
+                        .left = last_node,
+                        .right = parse(tokens, NULL)};
+    Node *node = create_node(NODE_EXPRESSION_ASSIGNMENT, &value);
     return node;
   }
 
@@ -363,10 +402,10 @@ Node *parse_expression(Token **tokens, Node *last_node) {
         continue;
       }
 
-      root = parse_expression(tokens, root);
+      root = parse(tokens, root);
     }
 
-    Node *node = create_node(NODE_STATEMENT_MULTI, statements, NULL, NULL);
+    Node *node = create_node(NODE_STATEMENT_MULTI, statements);
     return node;
   }
 
@@ -377,11 +416,11 @@ Node *parse_expression(Token **tokens, Node *last_node) {
     *tokens = (*tokens)->next; // skip =
     *tokens = (*tokens)->next; // skip >
 
-    Node *block = parse_expression(tokens, NULL);
+    Node *block = parse(tokens, NULL);
     Function *function = malloc(sizeof(*function));
     function->parameters = last_node;
     function->block = block;
-    Node *node = create_node(NODE_LITERAL_FUNCTION, function, NULL, NULL);
+    Node *node = create_node(NODE_LITERAL_FUNCTION, function);
     return node;
   }
 
@@ -405,55 +444,22 @@ Node *parse_expression(Token **tokens, Node *last_node) {
       // the right operand from the lesser precedence, and replace
       // it with this binary expression
       *tokens = current_token->next;
-      Node *node = create_node(NODE_EXPRESSION_BINARY, operator_symbol,
-                               last_node->right, NULL);
-      node->right = parse_expression(tokens, NULL);
+      NodeBinary value = {.operator_symbol = operator_symbol,
+                          .left = last_node->right,
+                          .right = parse(tokens, NULL)};
+      Node *node = create_node(NODE_EXPRESSION_BINARY, &value);
       last_node->right = node;
       return last_node;
     } else {
       *tokens = current_token->next;
-      Node *node =
-          create_node(NODE_EXPRESSION_BINARY, operator_symbol, last_node, NULL);
-      node->right = parse_expression(tokens, NULL);
+      NodeBinary value = {.operator_symbol = operator_symbol,
+                          .left = last_node,
+                          .right = parse(tokens, NULL)};
+      Node *node = create_node(NODE_EXPRESSION_BINARY, &value);
       return node;
     }
   }
 
   printf("Error: Could not parse %s\n", stringify_token(current_token));
   exit(1);
-}
-
-Program *parse(Token *token) {
-  Program *program = malloc(sizeof(Program));
-  if (program == NULL) {
-    printf("Error: cannot malloc program.\n");
-    exit(1);
-  }
-  program->statements = create_array();
-
-  // root of current node tree
-  Node *current_root = NULL;
-
-  // parse statements until end of file
-  while (token) {
-    // statement terminator
-    if (token->type == TOKEN_SYMBOL && starts_with(token->value, ";")) {
-      token = token->next;
-      push_array(program->statements, current_root);
-      current_root = NULL;
-      continue;
-    }
-
-    // end file
-    if (token->type == TOKEN_END_OF_FILE) {
-      if (current_root != NULL) {
-        push_array(program->statements, current_root);
-      }
-      break;
-    }
-
-    current_root = parse_expression(&token, current_root);
-  }
-
-  return program;
 }

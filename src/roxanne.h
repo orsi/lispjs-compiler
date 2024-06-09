@@ -50,6 +50,7 @@ typedef struct {
   Node *block;
 } Function;
 enum NodeType {
+  NODE_PROGRAM,
   NODE_EXPRESSION,
   NODE_EXPRESSION_ASSIGNMENT,
   NODE_EXPRESSION_BINARY,
@@ -65,17 +66,36 @@ enum NodeType {
   NODE_LITERAL_STRING,
   NODE_LITERAL_STRING_TEMPLATE,
 };
-struct Node {
-  enum NodeType type;
+typedef struct {
+  Node *expression;
+  Node *if_then;
+  Node *if_else;
+} NodeConditional;
+typedef struct {
+  char *operator_symbol;
   Node *left;
   Node *right;
+} NodeBinary;
+struct Node {
+  enum NodeType type;
+  Node *next;
+  // n.b. C11 anonymous union/struct
   union {
     bool boolean;
-    char *operator_symbol;
     char *identifier;
     double number;
     String *string;
-    Node *expression;
+    struct {
+      char *operator_symbol;
+      Node *left;
+      Node *right;
+    };
+    struct {
+      Node *expression;
+      Node *if_then;
+      Node *if_else;
+    };
+    Node *body;
     Function *function;
     Array *array;
     Array *string_template_parts;
@@ -83,16 +103,13 @@ struct Node {
     Array *object;
   };
 };
-typedef struct {
-  Array *statements;
-} Program;
 
 int is_keyword(char *word, int length);
 char *get_operator(Token *tokens);
-Node *create_node(enum NodeType type, void *value, Node *left, Node *right);
+Node *create_node(enum NodeType type, void *value);
 int get_operator_precedence(char *s);
-Node *parse_expression(Token **tokens, Node *last_node);
-Program *parse(Token *tokens);
+Node *parse(Token **tokens, Node *last_node);
+Node *parse_program(Token *tokens);
 
 // evaluate
 enum ResultType {
@@ -137,6 +154,6 @@ char *stringify_result(Result *result);
 void print_tokens(Token *token);
 void print_node_tree(Node *node, int level, const char *prefix);
 void print_result(Result *result);
-void print_program(Program *program);
+void print_program(Node *nodes);
 
 #endif
