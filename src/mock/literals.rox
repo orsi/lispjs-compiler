@@ -7,7 +7,7 @@
 // 3) Comma, the thousands separator used in most English-speaking countries.
 
 10 000.00; // number with decimal period
-10 000,00; // number with decimal comma
+// 10 000,00; // number with decimal comma
 
 // other numbering systems
 
@@ -31,4 +31,4 @@ false;
 [1,true,#b1,"hello!"];
 
 // large test
-// "crazy ${"this breaks with nested parts ${5}+${6}=${5+6}"} ${87 * 4 / 9} - ${1}+${2}*${3}=${1 + 2 * 3}";
+"crazy ${"does this break with nested parts? ${5}+${6}=${5+6}"} ${87 * 4 / 9} - ${1}+${2}*${3}=${1 + 2 * 3}";

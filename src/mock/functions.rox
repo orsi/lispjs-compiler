@@ -3,5 +3,5 @@
 };
 
 (a: 5, b: 'string') => {
-    hi: 'hello!';
+    good: 'bye :(';
 };

@@ -117,9 +117,9 @@ Token *lex_token(const char *start) {
           *end &&
           (isdigit(end[0]) ||                    // is digit
            (end[0] == '.' && isdigit(end[1])) || // is point followed by digit
-           (end[0] == ',' && isdigit(end[1])) || // is comma followed by digit
-           (end[0] == ' ' && isdigit(end[1]))))  // is space followed by digit
-      {
+           (end[0] == ' ' && isdigit(end[1])) || // is space followed by digit
+           (end[0] == '_' && isdigit(end[1])) // is underscore followed by digit
+           )) {
         end++;
       }
 

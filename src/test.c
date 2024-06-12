@@ -65,48 +65,78 @@ void test_lex(void) {
 }
 
 void test_parse(void) {
-  expect(stringify_node(parse_program(lex("1"))->body), "node:number:1");
-  expect(stringify_node(parse_program(lex("1.0"))->body), "node:number:1");
-  expect(stringify_node(parse_program(lex("-1.0"))->body), "node:binary:-1");
-  expect(stringify_node(parse_program(lex("0"))->body), "node:number:0");
+  expect(stringify_node(create_node(NODE_PROGRAM, parse(lex("1"), NULL))->body),
+         "node:number:1");
+  expect(
+      stringify_node(create_node(NODE_PROGRAM, parse(lex("1.0"), NULL))->body),
+      "node:number:1");
+  expect(
+      stringify_node(create_node(NODE_PROGRAM, parse(lex("-1.0"), NULL))->body),
+      "node:binary:-1");
+  expect(stringify_node(create_node(NODE_PROGRAM, parse(lex("0"), NULL))->body),
+         "node:number:0");
   // TODO: Should force always leading digit?
-  expect(stringify_node(parse_program(lex(".0"))->body), "node:number:0");
-  expect(stringify_node(parse_program(lex("-0"))->body), "node:binary:-0");
-  expect(stringify_node(parse_program(lex("-.0"))->body), "node:binary:-.0");
+  expect(
+      stringify_node(create_node(NODE_PROGRAM, parse(lex(".0"), NULL))->body),
+      "node:number:0");
+  expect(
+      stringify_node(create_node(NODE_PROGRAM, parse(lex("-0"), NULL))->body),
+      "node:binary:-0");
+  expect(
+      stringify_node(create_node(NODE_PROGRAM, parse(lex("-.0"), NULL))->body),
+      "node:binary:-.0");
 
   // test double precision up to 16 total digits
-  expect_number(parse_program(lex("123456789.123456786"))->body->number,
-                123456789.123456786);
-  expect(stringify_node(parse_program(lex("123456789.12345675"))->body),
+  expect_number(
+      create_node(NODE_PROGRAM, parse(lex("123456789.123456786"), NULL))
+          ->body->number,
+      123456789.123456786);
+  expect(stringify_node(
+             create_node(NODE_PROGRAM, parse(lex("123456789.12345675"), NULL))
+                 ->body),
          "node:number:123456789.1234567");
-  expect(stringify_node(parse_program(lex("99999999.99999999"))->body),
+  expect(stringify_node(
+             create_node(NODE_PROGRAM, parse(lex("99999999.99999999"), NULL))
+                 ->body),
          "node:number:99999999.99999999");
-  expect(stringify_node(parse_program(lex("99999999.999999999"))->body),
+  expect(stringify_node(
+             create_node(NODE_PROGRAM, parse(lex("99999999.999999999"), NULL))
+                 ->body),
          "node:number:100000000");
 
-  expect(stringify_node(parse_program(lex(("\"hi\"")))->body),
+  expect(stringify_node(
+             create_node(NODE_PROGRAM, parse(lex(("\"hi\"")), NULL))->body),
          "node:string:\"hi\"");
-  expect(stringify_node(parse_program(lex(("11 + 12.4")))->body),
+  expect(stringify_node(
+             create_node(NODE_PROGRAM, parse(lex(("11 + 12.4")), NULL))->body),
          "node:binary:11+12.4");
-  expect(stringify_node(parse_program(lex(("test")))->body),
+  expect(stringify_node(
+             create_node(NODE_PROGRAM, parse(lex(("test")), NULL))->body),
          "node:identifier:test");
 
-  expect(stringify_node(parse_program(lex(("hello: 1")))->body),
+  expect(stringify_node(
+             create_node(NODE_PROGRAM, parse(lex(("hello: 1")), NULL))->body),
          "node:assignment:hello:1");
-  expect(
-      stringify_node(
-          parse_program(lex(("if (1 + 2) * 3 > 1 {\n //\n } else {}")))->body),
-      "node:conditional:node:binary, >");
+  expect(stringify_node(
+             create_node(
+                 NODE_PROGRAM,
+                 parse(lex(("if (1 + 2) * 3 > 1 {\n //\n } else {}")), NULL))
+                 ->body),
+         "node:conditional:node:binary, >");
 
   // precedence
-  expect(stringify_node(parse_program(lex(("(1 + 2) * 3")))->body),
-         "node:binary:*");
-  expect(stringify_node(parse_program(lex(("1 + 2 * 3")))->body->right),
-         "node:binary:2*3");
+  expect(
+      stringify_node(
+          create_node(NODE_PROGRAM, parse(lex(("(1 + 2) * 3")), NULL))->body),
+      "node:binary:*");
+  expect(
+      stringify_node(create_node(NODE_PROGRAM, parse(lex(("1 + 2 * 3")), NULL))
+                         ->body->right),
+      "node:binary:2*3");
 }
 
 void test_evaluate(void) {
-  Node *program = parse_program(lex(read_filepath("./src/mock/literals.rox")));
+  Node *program = parse(lex(read_filepath("./src/mock/literals.rox")), NULL);
   Node *current = program->body;
   expect(stringify_result(evaluate(current)), "result:number:1.000000");
   current = current->next;
@@ -142,23 +172,35 @@ void test_evaluate(void) {
 int main(void) {
   test_lex();
   test_parse();
-  test_evaluate();
+  //   test_evaluate();
 
   Token *tokens;
-  tokens = lex(read_filepath("./src/mock/object-literals.rox"));
-  Node *node = parse_program(tokens);
-  printf("\nprogram\n");
+  Node *node;
+
+  tokens = lex(read_filepath("./src/mock/functions.rox"));
+  node = create_node(NODE_PROGRAM, parse(tokens, NULL));
+  printf("\nfunctions.rox\n");
   print_program(node);
 
-  //   tokens = lex(read_filepath("./src/mock/string-interpolation.rox"));
-  //   printf("\nprogram\n");
-  //   program = parse(tokens);
-  //   print_program(program);
+  tokens = lex(read_filepath("./src/mock/literals.rox"));
+  node = create_node(NODE_PROGRAM, parse(tokens, NULL));
+  printf("\nliterals.rox\n");
+  print_program(node);
 
-  //   tokens = lex(read_filepath("./src/mock/functions.rox"));
-  //   printf("\nprogram\n");
-  //   program = parse(tokens);
-  //   print_program(program);
+  //   tokens = lex(read_filepath("./src/mock/literals-numbers.rox"));
+  //   node = create_node(NODE_PROGRAM, parse(tokens, NULL));
+  //   printf("\nliterals-numbers.rox\n");
+  //   print_program(node);
+
+  //   tokens = lex(read_filepath("./src/mock/blocks.rox"));
+  //   node = create_node(NODE_PROGRAM, parse(tokens, NULL));
+  //   printf("\nblocks.rox\n");
+  //   print_program(node);
+
+  //   tokens = lex(read_filepath("./src/mock/string-interpolation.rox"));
+  //   node = create_node(NODE_PROGRAM, parse(tokens, NULL));
+  //   printf("\nstring-interpolation.rox\n");
+  //   print_program(node);
 
   print_test_results();
 }

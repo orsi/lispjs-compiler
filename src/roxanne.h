@@ -55,9 +55,9 @@ enum NodeType {
   NODE_EXPRESSION_ASSIGNMENT,
   NODE_EXPRESSION_BINARY,
   NODE_STATEMENT_MULTI,
-  NODE_STATEMENT_BLOCK,
+  NODE_BLOCK,
   NODE_STATEMENT_CONDITIONAL,
-  NODE_LITERAL_ARRAY,
+  NODE_ARRAY,
   NODE_LITERAL_BOOLEAN,
   NODE_LITERAL_FUNCTION,
   NODE_LITERAL_IDENTIFIER,
@@ -81,20 +81,26 @@ struct Node {
   Node *next;
   // n.b. C11 anonymous union/struct
   union {
+    // literals
     bool boolean;
     char *identifier;
     double number;
     String *string;
+    // binary, assignment
     struct {
       char *operator_symbol;
       Node *left;
       Node *right;
     };
+    // conditional
     struct {
-      Node *expression;
+      Node *condition;
       Node *if_then;
       Node *if_else;
     };
+    // expression
+    Node *expression;
+    // array, block, object, program
     Node *body;
     Function *function;
     Array *array;
@@ -108,8 +114,7 @@ int is_keyword(char *word, int length);
 char *get_operator(Token *tokens);
 Node *create_node(enum NodeType type, void *value);
 int get_operator_precedence(char *s);
-Node *parse(Token **tokens, Node *last_node);
-Node *parse_program(Token *tokens);
+Node *parse(Token *tokens, Node *last_node);
 
 // evaluate
 enum ResultType {

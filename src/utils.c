@@ -182,6 +182,30 @@ char *stringify_token(Token *token) {
   return token_string;
 }
 
+char *stringify_list(Node *node) {
+  size_t array_string_length = 0;
+  char *array_string = {0};
+  Node *current_node = node;
+
+  while (current_node) {
+    char *item_string = stringify_node_value(current_node);
+    size_t item_string_length = strlen(item_string);
+    array_string_length += item_string_length;
+    array_string = string_duplicate(array_string, array_string_length);
+    strcat(array_string, item_string);
+
+    if (current_node->next != NULL) {
+      array_string_length += 2;
+      array_string = string_duplicate(array_string, array_string_length);
+      strcat(array_string, ", ");
+    }
+
+    current_node = current_node->next;
+  }
+
+  return array_string;
+}
+
 char *stringify_array(Array *array) {
   size_t array_string_length = 0;
   char *array_string = {0};
@@ -209,13 +233,20 @@ char *stringify_node_value(Node *node) {
   char *destination = malloc(0);
   strcpy(destination, "");
 
-  if (node->type == NODE_LITERAL_ARRAY) {
-    char *array_items_string = stringify_array(node->array);
-    length += strlen(array_items_string) + 2;
+  if (node->type == NODE_ARRAY) {
+    char *items_string = stringify_list(node->body);
+    length += strlen(items_string) + 2;
     destination = string_duplicate(destination, length);
     strcat(destination, "[");
-    strcat(destination, array_items_string);
+    strcat(destination, items_string);
     strcat(destination, "]");
+  } else if (node->type == NODE_BLOCK) {
+    char *items_string = stringify_list(node->body);
+    length += strlen(items_string) + 2;
+    destination = string_duplicate(destination, length);
+    strcat(destination, "{");
+    strcat(destination, items_string);
+    strcat(destination, "}");
   } else if (node->type == NODE_LITERAL_BOOLEAN) {
     destination = string_duplicate(destination, node->boolean ? 4 : 5);
     strcat(destination, node->boolean ? "true" : "false");
@@ -224,37 +255,25 @@ char *stringify_node_value(Node *node) {
     destination = string_duplicate(destination, length);
     strcat(destination, "(");
 
-    Node *parameters = node->function->parameters;
-    if (parameters == NULL) {
-      length += 1;
+    // parameters
+    Function *function = node->function;
+    length += 4;
+    if (function->parameters == NULL || function->parameters->body == NULL) {
       destination = string_duplicate(destination, length);
-      strcat(destination, ")");
-      return destination;
-    }
-
-    Node *expressions = parameters->expression;
-    if (expressions == NULL) {
-      length += 1;
+    } else {
+      char *parameters_string = stringify_node_value(function->parameters->body);
+      length += strlen(parameters_string);
       destination = string_duplicate(destination, length);
-      strcat(destination, ")");
-      return destination;
+      strcat(destination, parameters_string);
     }
+    strcat(destination, ") =>");
 
-    Array *statements = expressions->statements;
-    if (statements == NULL) {
-      length += 1;
-      destination = string_duplicate(destination, length);
-      strcat(destination, ")");
-      return destination;
-    }
-
-    char *parameters_string = stringify_array(statements); // risky access!
-    length += strlen(parameters_string) + 1;
+    char *block_string = stringify_node_value(function->block);
+    length += strlen(block_string);
     destination = string_duplicate(destination, length);
-    strcat(destination, parameters_string);
-    strcat(destination, ")");
+    strcat(destination, block_string);
   } else if (node->type == NODE_LITERAL_OBJECT) {
-    char *object_items_string = stringify_array(node->object);
+    char *object_items_string = stringify_list(node->body);
     length += strlen(object_items_string) + 2;
     destination = string_duplicate(destination, length);
     strcat(destination, "{");
@@ -344,12 +363,8 @@ char *stringify_node(Node *node) {
   case NODE_LITERAL_BOOLEAN:
     length = sprintf(buffer, "node:boolean:%s", stringify_node_value(node));
     break;
-  case NODE_LITERAL_ARRAY: {
+  case NODE_ARRAY: {
     length = sprintf(buffer, "node:array:%s", stringify_node_value(node));
-    break;
-  }
-  case NODE_LITERAL_OBJECT: {
-    length = sprintf(buffer, "node:object:%s", stringify_node_value(node));
     break;
   }
   case (NODE_LITERAL_IDENTIFIER):
@@ -358,6 +373,10 @@ char *stringify_node(Node *node) {
   case (NODE_LITERAL_FUNCTION):
     length = sprintf(buffer, "node:function:%s", stringify_node_value(node));
     break;
+  case NODE_LITERAL_OBJECT: {
+    length = sprintf(buffer, "node:object:%s", stringify_node_value(node));
+    break;
+  }
   case (NODE_LITERAL_NUMBER):
     length = sprintf(buffer, "node:number:%s", stringify_node_value(node));
     break;
@@ -371,12 +390,14 @@ char *stringify_node(Node *node) {
   case NODE_STATEMENT_CONDITIONAL:
     length = sprintf(buffer, "node:conditional:%s", stringify_node_value(node));
     break;
-  case NODE_STATEMENT_BLOCK:
-    length = sprintf(buffer, "node:block:%s",
-                     stringify_node_value(node->expression));
+  case NODE_BLOCK:
+    length = sprintf(buffer, "node:block:%s", stringify_node_value(node));
     break;
   case (NODE_STATEMENT_MULTI):
     length = sprintf(buffer, "node:multi:%s", stringify_node_value(node));
+    break;
+  case NODE_PROGRAM:
+    length = sprintf(buffer, "node:program");
     break;
   }
   char *node_string = {0};
@@ -464,7 +485,6 @@ void print_tokens(Token *token) {
 void print_node_tree(Node *node, int level, const char *prefix) {
   int indent = level * 2;
   printf("%*s└ %s%s\n", indent, "", prefix, stringify_node(node));
-
 }
 
 void print_result(Result *result) { printf("%s\n", stringify_result(result)); }

@@ -98,7 +98,7 @@ Result *evaluate(Node *node) {
     evaluate_assignment_expression(result, node->left, node->right);
     break;
   }
-  case NODE_LITERAL_ARRAY: {
+  case NODE_ARRAY: {
     result->type = RESULT_ARRAY;
     result->array = *node->array;
     break;
@@ -155,7 +155,7 @@ Result *evaluate(Node *node) {
     result->string = string;
     break;
   }
-  case NODE_STATEMENT_BLOCK:
+  case NODE_BLOCK:
   case NODE_STATEMENT_CONDITIONAL:
   case NODE_LITERAL_IDENTIFIER:
   case NODE_LITERAL_OBJECT: {
