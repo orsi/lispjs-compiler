@@ -2,13 +2,14 @@
 
 ## Prerequisites
 
-- clang
-- make
+-   clang
+-   make
 
 ## Quick start
 
 ```sh
 git clone git@github.com:orsi/roxanne.git
 cd roxanne
-make test
+make build-test
+./bin/test
 ```
