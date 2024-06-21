@@ -52,46 +52,31 @@ Node *create_node(enum NodeType type, Token *start, Token *end) {
 Node *parse_node(Token *token, Node *last_node) {
   // literal number
   if (token->type == TOKEN_NUMBER) {
-    char normalizedNumber[token->length + 1];
-    char *current_value = token->start;
-    size_t i = 0;
-    while ((size_t)(current_value - token->start) < token->length) {
-      if (!starts_with(current_value, " ") &&
-          !starts_with(current_value, "_")) {
-        normalizedNumber[i] = current_value[0];
-        i++;
-      }
-      current_value++;
-    }
-    normalizedNumber[i] = '\0';
     Node *node = create_node(NODE_LITERAL_NUMBER, token, NULL);
-    node->base = 10;
-    node->number = atof(normalizedNumber);
-    return node;
-  }
+    char normalized_number[token->length + 1];
+    char *current_char = token->start;
 
-  // literal binary number
-  if (token->type == TOKEN_NUMBER_ALTERNATIVE_BASE &&
-      starts_with(token->start, "#")) {
-    char normalizedNumber[token->length + 1];
-    char *position = token->start;
-    position++; // # skip
-    position++; // b/h/o skip
-    size_t i = 0;
-    while ((size_t)(position - token->start) < token->length) {
-      if (position[0] != ' ') {
-        normalizedNumber[i] = position[0];
-        i++;
-      }
-      position++;
+    // if number starts with #, it is an alternative base, else parse as
+    // base 10 by default
+    if (starts_with(token->start, "#")) {
+      current_char++; // # skip
+      current_char++; // b/h/o skip
+      node->base = current_char[0] == 'b' ? 2 : current_char[0] == 'o' ? 8 : 16;
+    } else {
+      node->base = 10;
     }
-    normalizedNumber[i] = '\0';
 
-    int base = position[0] == 'b' ? 2 : position[0] == 'o' ? 8 : 16;
-    double number = strtol(normalizedNumber, NULL, base);
-    Node *node = create_node(NODE_LITERAL_NUMBER, token, NULL);
-    node->base = base;
-    node->number = number;
+    size_t normalized_length = 0;
+    for (size_t i = 0; i < token->length; i++) {
+      if (!starts_with(current_char, " ") && !starts_with(current_char, "_")) {
+        normalized_number[normalized_length] = current_char[0];
+        normalized_length++;
+      }
+      current_char++;
+    }
+
+    normalized_number[normalized_length] = '\0';
+    node->number = strtol(normalized_number, NULL, node->base);
     return node;
   }
 
@@ -436,7 +421,6 @@ Node *parse_node(Token *token, Node *last_node) {
   static const char *token_types[] = {
       "TOKEN_IDENTIFIER",
       "TOKEN_NUMBER",
-      "TOKEN_NUMBER_ALTERNATIVE_BASE",
       "TOKEN_STRING",
       "TOKEN_STRING_TEMPLATE_START",
       "TOKEN_STRING_TEMPLATE_END",

@@ -104,8 +104,7 @@ Token *lex_token(const char *token_start) {
       }
 
       size_t length = end - start;
-      Token *token =
-          create_token(TOKEN_NUMBER_ALTERNATIVE_BASE, length, current, end);
+      Token *token = create_token(TOKEN_NUMBER, length, current, end);
       return token;
     }
 

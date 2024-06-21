@@ -91,16 +91,6 @@ char *stringify_token(Token *token) {
     sprintf(token_string, "token:number:%.*s", (int)token->length,
             token->start);
     break;
-  case TOKEN_NUMBER_ALTERNATIVE_BASE:
-    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->start);
-    token_string = malloc(sizeof("token:number_alternative_base:") + length);
-    if (token_string == NULL) {
-      printf("Error: malloc token_string\n");
-      exit(1);
-    }
-    sprintf(token_string, "token:number:%.*s", (int)token->length,
-            token->start);
-    break;
   case TOKEN_STRING:
     length = snprintf(NULL, 0, "%.*s", (int)token->length, token->start);
     token_string = malloc(sizeof("token:string:") + length);
