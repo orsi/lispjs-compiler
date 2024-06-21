@@ -1,0 +1,26 @@
+"hello!";
+
+"no escaping\awe\awef\aw\efa\wef\f\2332\5t\n\wef\fa\aw\awef\\";
+
+"multi
+line
+string";
+
+"I'm a comment
+// inside a string!";
+
+"do         tabs            work?";
+
+"string ${"inter${"pol"}ation"} wat";
+
+"nested ${"binary ${5}+${6}=${5+6}"} operations: ${87 * 4 / 9} - ${1}+${2}*${3}=${1 + 2 * 3}";
+
+"${5+6}";
+
+"${(1+2) * (2+2)}";
+
+"omg ${"I think ${"I did it (${1 + 2}) * (${2+2}) = ${(1+2) * (2+2)}"}"}";
+
+"1 + 2 * 3 = ${1 + 2 * 3}, and should be ${7} yo";
+
+"${87 * 4 / 9} - ${1}+${2}*${3}=${1 + 2 * 3}";

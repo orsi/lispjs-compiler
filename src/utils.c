@@ -233,7 +233,18 @@ char *stringify_node_value(Node *node) {
   char *destination = malloc(0);
   strcpy(destination, "");
 
-  if (node->type == NODE_ARRAY) {
+  if (node->type == NODE_LITERAL_NUMBER) {
+    char buf[128];
+    size_t number_length;
+    if (node->base != 10) {
+      number_length = sprintf(buf, "%.16g(%.*s)", node->number,
+                              (int)node->start->length, node->start->value);
+    } else {
+      number_length = sprintf(buf, "%.16g", node->number);
+    }
+    destination = string_duplicate(destination, number_length);
+    strncat(destination, buf, number_length);
+  } else if (node->type == NODE_ARRAY) {
     char *items_string = stringify_list(node->body);
     length += strlen(items_string) + 2;
     destination = string_duplicate(destination, length);
@@ -261,7 +272,8 @@ char *stringify_node_value(Node *node) {
     if (function->parameters == NULL || function->parameters->body == NULL) {
       destination = string_duplicate(destination, length);
     } else {
-      char *parameters_string = stringify_node_value(function->parameters->body);
+      char *parameters_string =
+          stringify_node_value(function->parameters->body);
       length += strlen(parameters_string);
       destination = string_duplicate(destination, length);
       strcat(destination, parameters_string);
@@ -290,13 +302,20 @@ char *stringify_node_value(Node *node) {
     strncat(destination, "\"", 1);
     strncat(destination, result->string.value, result->string.length);
     strncat(destination, "\"", 1);
+  } else if (node->type == NODE_EXPRESSION) {
+    char *body_string = stringify_node_value(node->body);
+    length += strlen(body_string) + 2;
+    destination = string_duplicate(destination, length);
+    strcat(destination, "(");
+    strcat(destination, body_string);
+    strcat(destination, ")");
   } else if (node->type == NODE_EXPRESSION_ASSIGNMENT) {
-    size_t identifier_length = strlen(node->left->identifier);
-    char *value_string = stringify_node_value(node->right);
+    size_t identifier_length = strlen(node->variable->identifier);
+    char *value_string = stringify_node_value(node->value);
     size_t value_length = strlen(value_string);
     destination =
         string_duplicate(destination, identifier_length + value_length + 1);
-    strcat(destination, node->left->identifier);
+    strcat(destination, node->variable->identifier);
     strncat(destination, ":", 1);
     strcat(destination, value_string);
   } else if (node->type == NODE_EXPRESSION_BINARY) {

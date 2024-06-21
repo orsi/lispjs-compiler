@@ -1,9 +1,9 @@
 {
     cool: {
-        nested: "no!"
-    }
-    123;
-    "hi";
+        nested: "no!";
+    },
+    123,
+    "hi",
     [1,2,"3"];
 };
 
@@ -11,4 +11,16 @@
     arbitrary: "keys";
     like: 1;
     hi: "are great";
+};
+
+{
+    how: {
+        far: {
+            can: {
+                we: {
+                    go: "?";
+                };
+            };
+        };
+    };
 };

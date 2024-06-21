@@ -79,32 +79,45 @@ typedef struct {
 struct Node {
   enum NodeType type;
   Node *next;
+  Token *start;
+  // end token is exclusive and was not used in parsing the node
+  Token *end;
   // n.b. C11 anonymous union/struct
   union {
     // literals
     bool boolean;
     char *identifier;
-    double number;
+    struct {
+      int base;
+      double number;
+    };
     String *string;
-    // binary, assignment
+    // expression, array, block, object, program
+    Node *body;
+    // expression - assignment
+    struct {
+      Node *variable;
+      Node *value;
+    };
+    // expression - binary
     struct {
       char *operator_symbol;
       Node *left;
       Node *right;
     };
+    // string templates
+    struct {
+      Node *parts;
+    };
+    // todo
     // conditional
     struct {
       Node *condition;
       Node *if_then;
       Node *if_else;
     };
-    // expression
-    Node *expression;
-    // array, block, object, program
-    Node *body;
     Function *function;
     Array *array;
-    Array *string_template_parts;
     Array *statements;
     Array *object;
   };
@@ -112,7 +125,7 @@ struct Node {
 
 int is_keyword(char *word, int length);
 char *get_operator(Token *tokens);
-Node *create_node(enum NodeType type, void *value);
+Node *create_node(enum NodeType type, Token *start, Token *end);
 int get_operator_precedence(char *s);
 Node *parse(Token *tokens, Node *last_node);
 

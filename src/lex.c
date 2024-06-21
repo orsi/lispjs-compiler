@@ -15,9 +15,8 @@ Token *create_token(enum TokenType type, char *start, char *end, int length,
   return token;
 }
 
-Token *lex_token(const char *start) {
-  char *current = (char *)start;
-
+Token *lex_token(const char *token_start) {
+  char *current = (char *)token_start;
   while (*current) {
     // comment: single-line
     if (starts_with(current, "//")) {
@@ -42,6 +41,54 @@ Token *lex_token(const char *start) {
         current++;
       }
       continue;
+    }
+
+    // number literal
+    if (isdigit(current[0]) || (current[0] == '.' && isdigit(current[1]))) {
+      char *end = current;
+      while (
+          *end &&
+          (isdigit(end[0]) ||                    // is digit
+           (end[0] == '.' && isdigit(end[1])) || // is point followed by digit
+           (end[0] == ' ' && isdigit(end[1])) || // is space followed by digit
+           (end[0] == '_' && isdigit(end[1])) // is underscore followed by digit
+           )) {
+        end++;
+      }
+
+      size_t length = end - current;
+      Token *token = create_token(TOKEN_NUMBER, current, end, length, current);
+      return token;
+    }
+
+    // binary/hexadecimal/octal literals
+    if (ispunct(current[0]) && current[0] == '#') {
+      char *start = current;
+      char *end = current;
+      end++; // advance past #
+      char baseIndicator = end[0];
+      if (baseIndicator != 'b' && baseIndicator != 'B' &&
+          baseIndicator != 'h' && baseIndicator != 'H' &&
+          baseIndicator != 'o' && baseIndicator != 'O') {
+        printf("Error: #%c is not a valid number base\n", baseIndicator);
+        exit(1);
+      }
+      end++; // advance past base
+
+      while (
+          *end &&
+          (isalnum(end[0]) ||                     // is digit
+           ((end[0] == '.' && isalnum(end[1])) || // is point followed by digit
+            (end[0] == ',' && isalnum(end[1])) || // is comma followed by digit
+            (end[0] == ' ' && isalnum(end[1]))    // is space followed by digit
+            ))) {
+        end++;
+      }
+
+      size_t length = end - start;
+      Token *token = create_token(TOKEN_NUMBER_ALTERNATIVE_BASE, current, end,
+                                  length, current);
+      return token;
     }
 
     // string literal
@@ -110,53 +157,6 @@ Token *lex_token(const char *start) {
       return token_head.next;
     }
 
-    // number literal
-    if (isdigit(current[0]) || (current[0] == '.' && isdigit(current[1]))) {
-      char *end = current;
-      while (
-          *end &&
-          (isdigit(end[0]) ||                    // is digit
-           (end[0] == '.' && isdigit(end[1])) || // is point followed by digit
-           (end[0] == ' ' && isdigit(end[1])) || // is space followed by digit
-           (end[0] == '_' && isdigit(end[1])) // is underscore followed by digit
-           )) {
-        end++;
-      }
-
-      size_t length = end - current;
-      Token *token = create_token(TOKEN_NUMBER, current, end, length, current);
-      return token;
-    }
-
-    // binary/hexadecimal/octal literals
-    if (ispunct(current[0]) && current[0] == '#') {
-      char *end = current;
-      end++; // advance past #
-      char baseIndicator = end[0];
-      if (baseIndicator != 'b' && baseIndicator != 'B' &&
-          baseIndicator != 'h' && baseIndicator != 'H' &&
-          baseIndicator != 'o' && baseIndicator != 'O') {
-        printf("Error: #%c is not a valid number base\n", baseIndicator);
-        exit(1);
-      }
-      end++; // advance past base
-
-      while (
-          *end &&
-          (isalnum(end[0]) ||                     // is digit
-           ((end[0] == '.' && isalnum(end[1])) || // is point followed by digit
-            (end[0] == ',' && isalnum(end[1])) || // is comma followed by digit
-            (end[0] == ' ' && isalnum(end[1]))    // is space followed by digit
-            ))) {
-        end++;
-      }
-
-      size_t length = end - start;
-      Token *token = create_token(TOKEN_NUMBER_ALTERNATIVE_BASE, current, end,
-                                  length, current);
-      return token;
-    }
-
     // symbols
     if (ispunct(current[0])) {
       Token *token =
@@ -177,7 +177,7 @@ Token *lex_token(const char *start) {
       return token;
     }
 
-    printf("Error: could not lex '%c'\n", start[0]);
+    printf("Error: could not lex '%c'\n", token_start[0]);
     exit(1);
   }
 

@@ -38,7 +38,7 @@ Result *evaluate_binary_expression(Result *result, char *operator_symbol,
 
   // get left and right values
   if (left_node->type == NODE_EXPRESSION) {
-    left_result = evaluate(left_node->expression);
+    // left_result = evaluate(left_node->expression);
   } else if (left_node->type == NODE_EXPRESSION_BINARY) {
     evaluate_binary_expression(left_result, left_node->operator_symbol,
                                left_node->left, left_node->right);
@@ -48,7 +48,7 @@ Result *evaluate_binary_expression(Result *result, char *operator_symbol,
   }
 
   if (right_node->type == NODE_EXPRESSION) {
-    right_result = evaluate(right_node->expression);
+    // right_result = evaluate(right_node->expression);
   } else if (right_node->type == NODE_EXPRESSION_BINARY) {
     evaluate_binary_expression(right_result, right_node->operator_symbol,
                                right_node->left, right_node->right);
@@ -86,7 +86,7 @@ Result *evaluate(Node *node) {
 
   switch (node->type) {
   case NODE_EXPRESSION: {
-    result = evaluate(node->expression);
+    // result = evaluate(node->expression);
     break;
   }
   case (NODE_EXPRESSION_BINARY): {
@@ -123,14 +123,15 @@ Result *evaluate(Node *node) {
     string.length = 0;
     string.value = malloc(sizeof(char *));
 
-    for (size_t i = 0; i < node->string_template_parts->length; i++) {
-      Node *part = get_array_item_at(node->string_template_parts, i);
-      Result *part_result = evaluate(part);
+    Node *current_node = node->parts;
+    while (current_node) {
+      Result *part_result = evaluate(current_node);
       if (part_result->type == RESULT_STRING) {
         string.length += part_result->string.length;
         string.value = realloc(string.value, string.length);
         strncat(string.value, part_result->string.value,
                 part_result->string.length);
+        current_node = current_node->next;
         continue;
       }
 
@@ -141,6 +142,7 @@ Result *evaluate(Node *node) {
         string.length += l;
         string.value = realloc(string.value, string.length);
         strncat(string.value, buffer, l);
+        current_node = current_node->next;
         continue;
       }
 
@@ -149,6 +151,7 @@ Result *evaluate(Node *node) {
       string.length += l;
       string.value = realloc(string.value, string.length);
       strncat(string.value, buffer, l);
+      current_node = current_node->next;
     }
 
     result->type = RESULT_STRING;
