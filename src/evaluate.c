@@ -159,9 +159,8 @@ Result *evaluate(Node *node) {
     break;
   }
   case NODE_BLOCK:
-  case NODE_STATEMENT_CONDITIONAL:
-  case NODE_LITERAL_IDENTIFIER:
-  case NODE_LITERAL_OBJECT: {
+  case NODE_CONDITIONAL:
+  case NODE_LITERAL_IDENTIFIER: {
     result->type = RESULT_NONE;
     result->string = (String){0, (char *)""};
     break;

@@ -185,7 +185,7 @@ char *stringify_node_value(Node *node) {
     strcat(destination, "{");
     strcat(destination, items_string);
     strcat(destination, "}");
-  } else if (node->type == NODE_LITERAL_FUNCTION) {
+  } else if (node->type == NODE_FUNCTION) {
     length += 1;
     destination = string_duplicate(destination, length);
     strcat(destination, "(");
@@ -208,13 +208,6 @@ char *stringify_node_value(Node *node) {
     length += strlen(block_string);
     destination = string_duplicate(destination, length);
     strcat(destination, block_string);
-  } else if (node->type == NODE_LITERAL_OBJECT) {
-    char *object_items_string = stringify_list(node->body);
-    length += strlen(object_items_string) + 2;
-    destination = string_duplicate(destination, length);
-    strcat(destination, "{");
-    strcat(destination, object_items_string);
-    strcat(destination, "}");
   } else if (node->type == NODE_LITERAL_STRING) {
     destination = string_duplicate(destination, node->string->length + 2);
     strncat(destination, "\"", 1);
@@ -308,13 +301,9 @@ char *stringify_node(Node *node) {
   case (NODE_LITERAL_IDENTIFIER):
     length = sprintf(buffer, "node:identifier:%s", stringify_node_value(node));
     break;
-  case (NODE_LITERAL_FUNCTION):
+  case (NODE_FUNCTION):
     length = sprintf(buffer, "node:function:%s", stringify_node_value(node));
     break;
-  case NODE_LITERAL_OBJECT: {
-    length = sprintf(buffer, "node:object:%s", stringify_node_value(node));
-    break;
-  }
   case (NODE_LITERAL_NUMBER):
     length = sprintf(buffer, "node:number:%s", stringify_node_value(node));
     break;
@@ -325,7 +314,7 @@ char *stringify_node(Node *node) {
     length =
         sprintf(buffer, "node:string template:%s", stringify_node_value(node));
     break;
-  case NODE_STATEMENT_CONDITIONAL:
+  case NODE_CONDITIONAL:
     length = sprintf(buffer, "node:conditional:%s", stringify_node_value(node));
     break;
   case NODE_BLOCK:
