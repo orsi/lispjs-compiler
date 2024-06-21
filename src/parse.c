@@ -5,18 +5,18 @@
 #include <stdlib.h>
 #include <string.h>
 
-char *get_operator(Token *tokens) {
-  Token *current_token = tokens;
+char *get_operator(Token *token) {
+  Token *current_token = token;
   size_t length = 0;
 
   while (current_token && length < current_token->length &&
-         ispunct(current_token->value[0])) {
+         ispunct(current_token->start[0])) {
     length += 1;
-    current_token = tokens->next;
+    current_token = token->next;
   }
 
   char *operator_symbol = malloc(sizeof(char) * length);
-  strncpy(operator_symbol, tokens->value, length);
+  strncpy(operator_symbol, token->start, length);
   return operator_symbol;
 }
 
@@ -53,9 +53,9 @@ Node *parse_node(Token *token, Node *last_node) {
   // literal number
   if (token->type == TOKEN_NUMBER) {
     char normalizedNumber[token->length + 1];
-    char *current_value = token->value;
+    char *current_value = token->start;
     size_t i = 0;
-    while ((size_t)(current_value - token->value) < token->length) {
+    while ((size_t)(current_value - token->start) < token->length) {
       if (!starts_with(current_value, " ") &&
           !starts_with(current_value, "_")) {
         normalizedNumber[i] = current_value[0];
@@ -72,13 +72,13 @@ Node *parse_node(Token *token, Node *last_node) {
 
   // literal binary number
   if (token->type == TOKEN_NUMBER_ALTERNATIVE_BASE &&
-      starts_with(token->value, "#")) {
+      starts_with(token->start, "#")) {
     char normalizedNumber[token->length + 1];
-    char *position = token->value;
+    char *position = token->start;
     position++; // # skip
     position++; // b/h/o skip
     size_t i = 0;
-    while ((size_t)(position - token->value) < token->length) {
+    while ((size_t)(position - token->start) < token->length) {
       if (position[0] != ' ') {
         normalizedNumber[i] = position[0];
         i++;
@@ -104,17 +104,17 @@ Node *parse_node(Token *token, Node *last_node) {
       exit(1);
     }
     node->string->length = token->length;
-    node->string->value = token->value;
+    node->string->value = token->start;
     return node;
   }
 
   // keywords
   if (token->type == TOKEN_KEYWORD) {
     Node *node = create_node(NODE_LITERAL_BOOLEAN, token, NULL);
-    if (starts_with(token->value, "true")) {
+    if (starts_with(token->start, "true")) {
       node->type = NODE_LITERAL_BOOLEAN;
       node->boolean = true;
-    } else if (starts_with(token->value, "false")) {
+    } else if (starts_with(token->start, "false")) {
       node->type = NODE_LITERAL_BOOLEAN;
       node->boolean = false;
     } else {
@@ -134,7 +134,7 @@ Node *parse_node(Token *token, Node *last_node) {
       printf("Error: cannot malloc value\n");
       exit(1);
     }
-    node->identifier = strncpy(node->identifier, token->value, token->length);
+    node->identifier = strncpy(node->identifier, token->start, token->length);
     node->identifier[size] = '\0';
     return node;
   }
@@ -191,7 +191,7 @@ Node *parse_node(Token *token, Node *last_node) {
   }
 
   // array
-  if (token->type == TOKEN_SYMBOL && starts_with(token->value, "[")) {
+  if (token->type == TOKEN_SYMBOL && starts_with(token->start, "[")) {
     Node *node = create_node(NODE_ARRAY, token, NULL);
 
     token = token->next; // skip [
@@ -199,10 +199,10 @@ Node *parse_node(Token *token, Node *last_node) {
     Node head = {0};
     Node *list_head = &head;
     Node *current_node = NULL;
-    while (token && (!starts_with(token->value, "]"))) {
+    while (token && (!starts_with(token->start, "]"))) {
       // link to body on ; or ,
       if (current_node != NULL &&
-          (starts_with(token->value, ";") || starts_with(token->value, ","))) {
+          (starts_with(token->start, ";") || starts_with(token->start, ","))) {
         token = token->next;
         list_head = list_head->next = current_node;
         current_node = NULL;
@@ -225,7 +225,7 @@ Node *parse_node(Token *token, Node *last_node) {
   }
 
   // block
-  if (token->type == TOKEN_SYMBOL && starts_with(token->value, "{")) {
+  if (token->type == TOKEN_SYMBOL && starts_with(token->start, "{")) {
     Node *node = create_node(NODE_BLOCK, token, NULL);
 
     token = token->next; // skip {
@@ -234,10 +234,10 @@ Node *parse_node(Token *token, Node *last_node) {
     Node *list_head = &head;
     Node *current_node = NULL;
 
-    while (token && (!starts_with(token->value, "}"))) {
+    while (token && (!starts_with(token->start, "}"))) {
       // link statement to body
       if (current_node != NULL &&
-          (starts_with(token->value, ";") || starts_with(token->value, ","))) {
+          (starts_with(token->start, ";") || starts_with(token->start, ","))) {
         token = token->next;
         list_head = list_head->next = current_node;
         current_node = NULL;
@@ -261,7 +261,7 @@ Node *parse_node(Token *token, Node *last_node) {
 
   // // identifier keyword: if
   // if (current_token->type == TOKEN_IDENTIFIER &&
-  //     starts_with(current_token->value, "if")) {
+  //     starts_with(current_token->start, "if")) {
   //   NodeConditional value;
 
   //   // conditional
@@ -282,12 +282,12 @@ Node *parse_node(Token *token, Node *last_node) {
   //   while (current_sub_token) {
   //     current_sub_token = current_sub_token->next;
 
-  //     if (starts_with(current_sub_token->value, "{")) {
+  //     if (starts_with(current_sub_token->start, "{")) {
   //       matching_token_count = matching_token_count + 1;
-  //     } else if (starts_with(current_sub_token->value, "}") &&
+  //     } else if (starts_with(current_sub_token->start, "}") &&
   //                matching_token_count > 0) {
   //       matching_token_count = matching_token_count - 1;
-  //     } else if (starts_with(current_sub_token->value, "}") &&
+  //     } else if (starts_with(current_sub_token->start, "}") &&
   //                matching_token_count == 0) {
   //       break;
   //     }
@@ -298,18 +298,18 @@ Node *parse_node(Token *token, Node *last_node) {
 
   //   // else block
   //   if (current_token->type == TOKEN_IDENTIFIER &&
-  //       starts_with(current_token->value, "else")) {
+  //       starts_with(current_token->start, "else")) {
   //     sub_head = *current_token->next;
   //     current_sub_token = &sub_head;
   //     matching_token_count = 0; // for counting matching tokens
   //     while (current_sub_token &&
-  //            (!starts_with(current_sub_token->value, "}") &&
+  //            (!starts_with(current_sub_token->start, "}") &&
   //             matching_token_count == 0)) {
   //       current_sub_token = current_sub_token->next;
 
-  //       if (starts_with(current_sub_token->value, "{")) {
+  //       if (starts_with(current_sub_token->start, "{")) {
   //         matching_token_count = matching_token_count + 1;
-  //       } else if (starts_with(current_sub_token->value, "}") &&
+  //       } else if (starts_with(current_sub_token->start, "}") &&
   //                  matching_token_count > 0) {
   //         matching_token_count = matching_token_count - 1;
   //       }
@@ -325,7 +325,7 @@ Node *parse_node(Token *token, Node *last_node) {
 
   // // function
   // if (current_token->type == TOKEN_SYMBOL &&
-  //     starts_with(current_token->value, "=>") && last_node != NULL &&
+  //     starts_with(current_token->start, "=>") && last_node != NULL &&
   //     last_node->type == NODE_EXPRESSION) {
   //   current_token = (current_token)->next; // skip =
   //   current_token = (current_token)->next; // skip >
@@ -334,13 +334,13 @@ Node *parse_node(Token *token, Node *last_node) {
   //   Token *current_sub_token = &sub_head;
   //   size_t matching_token_count = 0; // for counting matching tokens
   //   while (current_sub_token &&
-  //          (!starts_with(current_sub_token->value, "}") &&
+  //          (!starts_with(current_sub_token->start, "}") &&
   //           matching_token_count == 0)) {
   //     current_sub_token = current_sub_token->next;
 
-  //     if (starts_with(current_sub_token->value, "{")) {
+  //     if (starts_with(current_sub_token->start, "{")) {
   //       matching_token_count = matching_token_count + 1;
-  //     } else if (starts_with(current_sub_token->value, "}") &&
+  //     } else if (starts_with(current_sub_token->start, "}") &&
   //                matching_token_count > 0) {
   //       matching_token_count = matching_token_count - 1;
   //     };
@@ -357,12 +357,12 @@ Node *parse_node(Token *token, Node *last_node) {
   // }
 
   // expression
-  if (token->type == TOKEN_SYMBOL && starts_with(token->value, "(")) {
+  if (token->type == TOKEN_SYMBOL && starts_with(token->start, "(")) {
     Node *node = create_node(NODE_EXPRESSION, token, NULL);
 
     token = token->next; // skip (
 
-    while (token && !starts_with(token->value, ")")) {
+    while (token && !starts_with(token->start, ")")) {
       node->body = parse_node(token, node->body);
       token = node->body->end;
     }
@@ -373,14 +373,14 @@ Node *parse_node(Token *token, Node *last_node) {
   }
 
   // expression - assignment
-  if (token->type == TOKEN_SYMBOL && starts_with(token->value, ":")) {
+  if (token->type == TOKEN_SYMBOL && starts_with(token->start, ":")) {
     Node *node = create_node(NODE_EXPRESSION_ASSIGNMENT, token, NULL);
     node->variable = last_node;
 
     token = token->next; // skip :
 
-    while (token && (!starts_with(token->value, ";") &&
-                     !starts_with(token->value, ","))) {
+    while (token && (!starts_with(token->start, ";") &&
+                     !starts_with(token->start, ","))) {
       node->value = parse_node(token, node->value);
       token = node->value->end;
     }
@@ -391,16 +391,16 @@ Node *parse_node(Token *token, Node *last_node) {
 
   // expression - binary
   if (token->type == TOKEN_SYMBOL &&
-      (starts_with(token->value, "+") || starts_with(token->value, "-") ||
-       starts_with(token->value, "/") || starts_with(token->value, "*") ||
-       starts_with(token->value, "%%") || starts_with(token->value, "<") ||
-       starts_with(token->value, ">") || starts_with(token->value, "<=") ||
-       starts_with(token->value, ">="))) {
+      (starts_with(token->start, "+") || starts_with(token->start, "-") ||
+       starts_with(token->start, "/") || starts_with(token->start, "*") ||
+       starts_with(token->start, "%%") || starts_with(token->start, "<") ||
+       starts_with(token->start, ">") || starts_with(token->start, "<=") ||
+       starts_with(token->start, ">="))) {
 
     Node *binary_root_node = last_node;
-    while (token && (!starts_with(token->value, ";") &&
-                     !starts_with(token->value, ")") &&
-                     !starts_with(token->value, "}"))) {
+    while (token && (!starts_with(token->start, ";") &&
+                     !starts_with(token->start, ")") &&
+                     !starts_with(token->start, "}"))) {
       char *operator_symbol = get_operator(token);
 
       if (binary_root_node != NULL &&
@@ -446,7 +446,7 @@ Node *parse_node(Token *token, Node *last_node) {
       "TOKEN_END_OF_FILE",
   };
   printf("Could not parse token: %s, \"%.*s\"\n", token_types[token->type],
-         (int)token->length, token->value);
+         (int)token->length, token->start);
   exit(1);
 }
 
@@ -459,7 +459,7 @@ Node *parse(Token *token, Node *parent_node) {
   while (current_token && current_token->type != TOKEN_END_OF_FILE) {
     // statement terminator
     if (current_token->type == TOKEN_SYMBOL &&
-        starts_with(current_token->value, ";")) {
+        starts_with(current_token->start, ";")) {
       statements = statements->next = last_node;
       last_node = NULL;
       current_token = current_token->next;
@@ -468,7 +468,7 @@ Node *parse(Token *token, Node *parent_node) {
 
     // elision
     if (current_token->type == TOKEN_SYMBOL &&
-        starts_with(current_token->value, ",")) {
+        starts_with(current_token->start, ",")) {
       statements = statements->next = last_node;
       current_token = current_token->next;
       continue;

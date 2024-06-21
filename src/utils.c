@@ -121,53 +121,53 @@ char *stringify_token(Token *token) {
     strcpy(token_string, "token:string_template_part_end");
     break;
   case TOKEN_IDENTIFIER:
-    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->start);
     token_string = malloc(sizeof("token:id:") + length);
     if (token_string == NULL) {
       printf("Error: malloc token_string\n");
       exit(1);
     }
-    sprintf(token_string, "token:id:%.*s", (int)token->length, token->value);
+    sprintf(token_string, "token:id:%.*s", (int)token->length, token->start);
     break;
   case TOKEN_NUMBER:
-    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->start);
     token_string = malloc(sizeof("token:number:") + length);
     if (token_string == NULL) {
       printf("Error: malloc token_string\n");
       exit(1);
     }
     sprintf(token_string, "token:number:%.*s", (int)token->length,
-            token->value);
+            token->start);
     break;
   case TOKEN_NUMBER_ALTERNATIVE_BASE:
-    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->start);
     token_string = malloc(sizeof("token:number_alternative_base:") + length);
     if (token_string == NULL) {
       printf("Error: malloc token_string\n");
       exit(1);
     }
     sprintf(token_string, "token:number:%.*s", (int)token->length,
-            token->value);
+            token->start);
     break;
   case TOKEN_STRING:
-    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->start);
     token_string = malloc(sizeof("token:string:") + length);
     if (token_string == NULL) {
       printf("Error: malloc token_string\n");
       exit(1);
     }
     sprintf(token_string, "token:string:%.*s", (int)token->length,
-            token->value);
+            token->start);
     break;
   case TOKEN_SYMBOL:
-    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->value);
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->start);
     token_string = malloc(sizeof("token:symbol:") + length);
     if (token_string == NULL) {
       printf("Error: malloc token_string\n");
       exit(1);
     }
     sprintf(token_string, "token:symbol:%.*s", (int)token->length,
-            token->value);
+            token->start);
     break;
   case TOKEN_END_OF_FILE:
     token_string = malloc(sizeof("token:eof"));
@@ -245,7 +245,7 @@ char *stringify_node_value(Node *node) {
     size_t number_length;
     if (node->base != 10) {
       number_length = sprintf(buf, "%.16g(%.*s)", node->number,
-                              (int)node->start->length, node->start->value);
+                              (int)node->start->length, node->start->start);
     } else {
       number_length = sprintf(buf, "%.16g", node->number);
     }

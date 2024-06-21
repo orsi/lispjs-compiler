@@ -185,11 +185,11 @@ int main(void) {
   Token *tokens;
   Node *node;
 
-  // tokens = lex(read_filepath("./src/mock/literals-identifiers.rox"));
-  // node = create_node(NODE_PROGRAM, tokens, NULL);
-  // node->body = parse(tokens, NULL);
-  // printf("\nliterals-identifiers.rox\n");
-  // print_program(node);
+  tokens = lex(read_filepath("./src/mock/literals-identifiers.rox"));
+  node = create_node(NODE_PROGRAM, tokens, NULL);
+  node->body = parse(tokens, NULL);
+  printf("\nliterals-identifiers.rox\n");
+  print_program(node);
 
   tokens = lex(read_filepath("./src/mock/literals-keywords.rox"));
   node = create_node(NODE_PROGRAM, tokens, NULL);
@@ -197,37 +197,41 @@ int main(void) {
   printf("\nliterals-keywords.rox\n");
   print_program(node);
 
-  // tokens = lex(read_filepath("./src/mock/literals-numbers.rox"));
-  // node = create_node(NODE_PROGRAM, parse(tokens, NULL));
-  // printf("\nliterals.rox\n");
-  // print_program(node);
+  tokens = lex(read_filepath("./src/mock/literals-numbers.rox"));
+  node = create_node(NODE_PROGRAM, tokens, NULL);
+  node->body = parse(tokens, NULL);
+  printf("\nliterals.rox\n");
+  print_program(node);
 
-  // tokens = lex(read_filepath("./src/mock/literals-strings.rox"));
-  // node = create_node(NODE_PROGRAM, parse(tokens, NULL));
-  // printf("\nliterals-strings.rox\n");
-  // print_program(node);
+  tokens = lex(read_filepath("./src/mock/literals-strings.rox"));
+  node = create_node(NODE_PROGRAM, tokens, NULL);
+  node->body = parse(tokens, NULL);
+  printf("\nliterals-strings.rox\n");
+  print_program(node);
 
-  // tokens = lex(read_filepath("./src/mock/expressions-binary.rox"));
-  // node = create_node(NODE_PROGRAM, parse(tokens, NULL));
-  // printf("\nexpressions-binary.rox\n");
-  // print_program(node);
+  tokens = lex(read_filepath("./src/mock/expressions-binary.rox"));
+  node = create_node(NODE_PROGRAM, tokens, NULL);
+  node->body = parse(tokens, NULL);
+  printf("\nexpressions-binary.rox\n");
+  print_program(node);
 
-  // tokens = lex(read_filepath("./src/mock/expressions-assignment.rox"));
-  // node = create_node(NODE_PROGRAM, parse(tokens, NULL));
-  // printf("\nexpressions-assignment.rox\n");
-  // print_program(node);
+  tokens = lex(read_filepath("./src/mock/expressions-assignment.rox"));
+  node = create_node(NODE_PROGRAM, tokens, NULL);
+  node->body = parse(tokens, NULL);
+  printf("\nexpressions-assignment.rox\n");
+  print_program(node);
 
-  // tokens = lex(read_filepath("./src/mock/arrays.rox"));
-  // node = create_node(NODE_PROGRAM, tokens, NULL);
-  // node->body = parse(tokens, NULL);
-  // printf("\narrays.rox\n");
-  // print_program(node);
+  tokens = lex(read_filepath("./src/mock/arrays.rox"));
+  node = create_node(NODE_PROGRAM, tokens, NULL);
+  node->body = parse(tokens, NULL);
+  printf("\narrays.rox\n");
+  print_program(node);
 
-  // tokens = lex(read_filepath("./src/mock/blocks.rox"));
-  // node = create_node(NODE_PROGRAM, tokens, NULL);
-  // node->body = parse(tokens, NULL);
-  // printf("\nblocks.rox\n");
-  // print_program(node);
+  tokens = lex(read_filepath("./src/mock/blocks.rox"));
+  node = create_node(NODE_PROGRAM, tokens, NULL);
+  node->body = parse(tokens, NULL);
+  printf("\nblocks.rox\n");
+  print_program(node);
 
   //   tokens = lex(read_filepath("./src/mock/functions.rox"));
   //   node = create_node(NODE_PROGRAM, parse(tokens, NULL));

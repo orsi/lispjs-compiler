@@ -18,14 +18,18 @@ bool is_keyword(char *word, int length) {
   return is_match;
 }
 
-Token *create_token(enum TokenType type, char *start, char *end, int length,
-                    char *value) {
+Token *create_token(enum TokenType type, int length, char *start, char *end) {
   Token *token = malloc(sizeof(Token));
   if (token == NULL) {
     printf("Error: malloc token\n");
     exit(1);
   }
-  *token = (Token){type, start, end, length, value, NULL};
+  token->type = type;
+  token->length = length;
+  token->start = start;
+  token->end = end;
+  token->next = NULL;
+
   return token;
 }
 
@@ -71,7 +75,7 @@ Token *lex_token(const char *token_start) {
       }
 
       size_t length = end - current;
-      Token *token = create_token(TOKEN_NUMBER, current, end, length, current);
+      Token *token = create_token(TOKEN_NUMBER, length, current, end);
       return token;
     }
 
@@ -100,8 +104,8 @@ Token *lex_token(const char *token_start) {
       }
 
       size_t length = end - start;
-      Token *token = create_token(TOKEN_NUMBER_ALTERNATIVE_BASE, current, end,
-                                  length, current);
+      Token *token =
+          create_token(TOKEN_NUMBER_ALTERNATIVE_BASE, length, current, end);
       return token;
     }
 
@@ -118,15 +122,14 @@ Token *lex_token(const char *token_start) {
           if (token_head.next == NULL) {
             // create marker for beginning of string template
             token_current = token_current->next = create_token(
-                TOKEN_STRING_TEMPLATE_START, position, position, 0, position);
+                TOKEN_STRING_TEMPLATE_START, 0, position, position);
           }
-          token_current = token_current->next = create_token(
-              TOKEN_STRING, position, end, end - position, position);
+          token_current = token_current->next =
+              create_token(TOKEN_STRING, end - position, position, end);
           position = end;
           end += 2; // ${
-          token_current = token_current->next =
-              create_token(TOKEN_STRING_TEMPLATE_PART_START, position, end,
-                           end - position, position);
+          token_current = token_current->next = create_token(
+              TOKEN_STRING_TEMPLATE_PART_START, end - position, position, end);
           position = end;
           while (*end && !starts_with(end, "}")) {
             Token *token = lex_token(end);
@@ -145,9 +148,8 @@ Token *lex_token(const char *token_start) {
           }
           position = end;
           end += 1; // skip }
-          token_current = token_current->next =
-              create_token(TOKEN_STRING_TEMPLATE_PART_END, position, end,
-                           end - position, position);
+          token_current = token_current->next = create_token(
+              TOKEN_STRING_TEMPLATE_PART_END, end - position, position, end);
           position = end;
         } else {
           end++;
@@ -157,15 +159,15 @@ Token *lex_token(const char *token_start) {
       if (token_head.next == NULL) {
         // regular ol' string
         token_current = token_current->next =
-            create_token(TOKEN_STRING, position, end + 1, end - position,
-                         position); // end + 1 skips final quote
+            create_token(TOKEN_STRING, end - position, position,
+                         end + 1); // end + 1 skips final quote
       } else {
         // final string plus end marker for template string
         token_current = token_current->next =
-            create_token(TOKEN_STRING, position, end + 1, end - position,
-                         position); // end + 1 skips final quote
-        token_current = token_current->next = create_token(
-            TOKEN_STRING_TEMPLATE_END, end + 1, end + 1, 0, end + 1);
+            create_token(TOKEN_STRING, end - position, position,
+                         end + 1); // end + 1 skips final quote
+        token_current = token_current->next =
+            create_token(TOKEN_STRING_TEMPLATE_END, 0, end + 1, end + 1);
       }
 
       return token_head.next;
@@ -173,8 +175,7 @@ Token *lex_token(const char *token_start) {
 
     // symbols
     if (ispunct(current[0])) {
-      Token *token =
-          create_token(TOKEN_SYMBOL, current, current + 1, 1, current);
+      Token *token = create_token(TOKEN_SYMBOL, 1, current, current + 1);
       return token;
     }
 
@@ -194,7 +195,7 @@ Token *lex_token(const char *token_start) {
         type = TOKEN_IDENTIFIER;
       }
 
-      Token *token = create_token(type, current, end, length, current);
+      Token *token = create_token(type, length, current, end);
       return token;
     }
 
@@ -226,7 +227,7 @@ Token *lex(const char *start) {
   }
 
   current_token = current_token->next =
-      create_token(TOKEN_END_OF_FILE, position, position, 0, position);
+      create_token(TOKEN_END_OF_FILE, 0, position, position);
 
   return head.next;
 }

@@ -33,16 +33,14 @@ enum TokenType {
 typedef struct Token Token;
 struct Token {
   enum TokenType type;
+  size_t length;
   char *start;
   char *end;
-  size_t length;
-  char *value;
   Token *next;
 };
 
 bool is_keyword(char *word, int length);
-Token *create_token(enum TokenType type, char *start, char *end, int length,
-                    char *value);
+Token *create_token(enum TokenType type, int length, char *start, char *end);
 Token *lex(const char *start);
 
 // parsing
