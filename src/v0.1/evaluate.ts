@@ -12,7 +12,7 @@ import {
 const identifiers: Record<string, unknown> = {};
 
 export function evaluate(node: ProgramNode): any[] {
-    const results = [];
+    const results: any[] = [];
     for (const body of node.body) {
         results.push(compute(body));
     }

@@ -2,12 +2,14 @@
 
 ## Prerequisites
 
-- [Deno](https://docs.deno.com/runtime/manual/getting_started/installation)
+-   clang
+-   make
 
 ## Quick start
 
 ```sh
 git clone git@github.com:orsi/roxanne.git
 cd roxanne
-deno test
+make build-test
+./bin/test
 ```
