@@ -165,6 +165,10 @@ Result *evaluate(Node *node) {
     result->string = (String){0, (char *)""};
     break;
   }
+  case NODE_PROGRAM:
+    break;
+  case NODE_FUNCTION:
+    break;
   }
 
   return result;
