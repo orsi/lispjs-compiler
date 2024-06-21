@@ -99,8 +99,8 @@ Result *evaluate(Node *node) {
     break;
   }
   case NODE_ARRAY: {
-    result->type = RESULT_ARRAY;
-    result->array = *node->array;
+    // result->type = RESULT_ARRAY;
+    // result->array = *node->array;
     break;
   }
   case NODE_LITERAL_BOOLEAN: {

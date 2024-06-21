@@ -48,54 +48,6 @@ char *read_filepath(const char *filepath) {
   return contents;
 }
 
-Array *create_array(void) {
-  Array *array = malloc(sizeof(Array));
-  if (array == NULL) {
-    printf("Could not malloc array.\n");
-    exit(1);
-  }
-  array->capacity = 5;
-  array->length = 0;
-  array->items = malloc(sizeof(void *) * array->capacity);
-  if (array->items == NULL) {
-    printf("Could not malloc array->items.\n");
-    exit(1);
-  }
-  return array;
-}
-
-void *get_array_item_at(Array *array, size_t index) {
-  if (index >= array->length) {
-    return NULL;
-  }
-
-  return array->items[index];
-}
-
-Array *push_array(Array *array, void *item) {
-  if (array->length == array->capacity) {
-    array->capacity *= 2;
-    array->items = realloc(array->items, sizeof(void *) * array->capacity);
-    if (array->items == NULL) {
-      printf("Could not realloc array->items\n");
-      exit(1);
-    }
-  }
-
-  array->items[array->length] = item;
-  array->length += 1;
-  return array;
-}
-
-void *pop_array(Array *array) {
-  if (array->length == 0) {
-    return NULL;
-  }
-
-  array->length -= 1;
-  return get_array_item_at(array, array->length);
-}
-
 char *stringify_token(Token *token) {
   char *token_string = NULL;
   int length;
@@ -183,49 +135,27 @@ char *stringify_token(Token *token) {
 }
 
 char *stringify_list(Node *node) {
-  size_t array_string_length = 0;
-  char *array_string = {0};
+  size_t list_string_length = 0;
+  char *list_string = {0};
   Node *current_node = node;
 
   while (current_node) {
     char *item_string = stringify_node_value(current_node);
     size_t item_string_length = strlen(item_string);
-    array_string_length += item_string_length;
-    array_string = string_duplicate(array_string, array_string_length);
-    strcat(array_string, item_string);
+    list_string_length += item_string_length;
+    list_string = string_duplicate(list_string, list_string_length);
+    strcat(list_string, item_string);
 
     if (current_node->next != NULL) {
-      array_string_length += 2;
-      array_string = string_duplicate(array_string, array_string_length);
-      strcat(array_string, ", ");
+      list_string_length += 2;
+      list_string = string_duplicate(list_string, list_string_length);
+      strcat(list_string, ", ");
     }
 
     current_node = current_node->next;
   }
 
-  return array_string;
-}
-
-char *stringify_array(Array *array) {
-  size_t array_string_length = 0;
-  char *array_string = {0};
-
-  for (size_t i = 0; i < array->length; i++) {
-    Node *item = get_array_item_at(array, i);
-    char *item_string = stringify_node_value(item);
-    size_t item_string_length = strlen(item_string);
-    array_string_length += item_string_length;
-    array_string = string_duplicate(array_string, array_string_length);
-    strcat(array_string, item_string);
-
-    if (i < array->length - 1) {
-      array_string_length += 2;
-      array_string = string_duplicate(array_string, array_string_length);
-      strcat(array_string, ", ");
-    }
-  }
-
-  return array_string;
+  return list_string;
 }
 
 char *stringify_node_value(Node *node) {
@@ -350,11 +280,6 @@ char *stringify_node_value(Node *node) {
     if (right_value_string != NULL) {
       strcat(destination, right_value_string);
     }
-  } else if (node->type == NODE_STATEMENT_MULTI) {
-    char *statements_items_string = stringify_array(node->statements);
-    length += strlen(statements_items_string);
-    destination = string_duplicate(destination, length);
-    strcat(destination, statements_items_string);
   } else {
     char buf[128];
     size_t number_length = sprintf(buf, "%.16g", node->number);
@@ -416,9 +341,6 @@ char *stringify_node(Node *node) {
   case NODE_BLOCK:
     length = sprintf(buffer, "node:block:%s", stringify_node_value(node));
     break;
-  case (NODE_STATEMENT_MULTI):
-    length = sprintf(buffer, "node:multi:%s", stringify_node_value(node));
-    break;
   case NODE_PROGRAM:
     length = sprintf(buffer, "node:program");
     break;
@@ -434,36 +356,36 @@ char *stringify_result(Result *result) {
   size_t length = 0;
   switch (result->type) {
   case (RESULT_ARRAY): {
-    length = sprintf(string, "result:array:[");
+    // length = sprintf(string, "result:array:[");
 
-    for (size_t i = 0; i < result->array.length; i++) {
-      Node *part = get_array_item_at(&result->array, i);
-      Result *part_result = evaluate(part);
-      if (part_result->type == RESULT_STRING) {
-        length += part_result->string.length + 2;
-        strncat(string, "\"", 1);
-        strncat(string, part_result->string.value, part_result->string.length);
-        strncat(string, "\"", 1);
-      } else if (part_result->type == RESULT_BOOLEAN) {
-        char buffer[128];
-        size_t l =
-            sprintf(buffer, "%s", part_result->boolean ? "true" : "false");
-        length += l;
-        strncat(string, buffer, l);
-      } else {
-        char buffer[128];
-        size_t l = sprintf(buffer, "%g", part_result->number);
-        length += l;
-        strncat(string, buffer, l);
-      }
+    // for (size_t i = 0; i < result->array.length; i++) {
+    //   Node *part = get_array_item_at(&result->array, i);
+    //   Result *part_result = evaluate(part);
+    //   if (part_result->type == RESULT_STRING) {
+    //     length += part_result->string.length + 2;
+    //     strncat(string, "\"", 1);
+    //     strncat(string, part_result->string.value,
+    //     part_result->string.length); strncat(string, "\"", 1);
+    //   } else if (part_result->type == RESULT_BOOLEAN) {
+    //     char buffer[128];
+    //     size_t l =
+    //         sprintf(buffer, "%s", part_result->boolean ? "true" : "false");
+    //     length += l;
+    //     strncat(string, buffer, l);
+    //   } else {
+    //     char buffer[128];
+    //     size_t l = sprintf(buffer, "%g", part_result->number);
+    //     length += l;
+    //     strncat(string, buffer, l);
+    //   }
 
-      if (i < result->array.length - 1) {
-        strncat(string, ", ", 2);
-        length += 2;
-      }
-    }
-    length += 1;
-    strncat(string, "]", 1);
+    //   if (i < result->array.length - 1) {
+    //     strncat(string, ", ", 2);
+    //     length += 2;
+    //   }
+    // }
+    // length += 1;
+    // strncat(string, "]", 1);
     break;
   }
   case (RESULT_BOOLEAN): {
@@ -505,17 +427,17 @@ void print_tokens(Token *token) {
   printf("total: %zu\n", length);
 }
 
-void print_node_tree(Node *node, int level, const char *prefix) {
+void print_nodes(Node *node, int level, const char *prefix) {
   int indent = level * 2;
   printf("%*s└ %s%s\n", indent, "", prefix, stringify_node(node));
 }
 
-void print_result(Result *result) { printf("%s\n", stringify_result(result)); }
-
 void print_program(Node *node_program) {
   Node *current = node_program->body;
   while (current) {
-    print_node_tree(current, 0, " ");
+    print_nodes(current, 0, " ");
     current = current->next;
   }
 }
+
+void print_result(Result *result) { printf("%s\n", stringify_result(result)); }

@@ -6,12 +6,6 @@
 #include <string.h>
 
 typedef struct {
-  size_t length;
-  size_t capacity;
-  void **items;
-} Array;
-
-typedef struct {
   int length;
   char *value;
 } String;
@@ -54,7 +48,6 @@ enum NodeType {
   NODE_EXPRESSION,
   NODE_EXPRESSION_ASSIGNMENT,
   NODE_EXPRESSION_BINARY,
-  NODE_STATEMENT_MULTI,
   NODE_BLOCK,
   NODE_STATEMENT_CONDITIONAL,
   NODE_ARRAY,
@@ -66,21 +59,11 @@ enum NodeType {
   NODE_LITERAL_STRING,
   NODE_LITERAL_STRING_TEMPLATE,
 };
-typedef struct {
-  Node *expression;
-  Node *if_then;
-  Node *if_else;
-} NodeConditional;
-typedef struct {
-  char *operator_symbol;
-  Node *left;
-  Node *right;
-} NodeBinary;
 struct Node {
   enum NodeType type;
   Node *next;
   Token *start;
-  // end token is exclusive and was not used in parsing the node
+  // end token is exclusive and was not parsed
   Token *end;
   // n.b. C11 anonymous union/struct
   union {
@@ -117,9 +100,6 @@ struct Node {
       Node *if_else;
     };
     Function *function;
-    Array *array;
-    Array *statements;
-    Array *object;
   };
 };
 
@@ -142,7 +122,6 @@ typedef struct {
     bool boolean;
     double number;
     String string;
-    Array array;
   };
 } Result;
 Result *evaluate_assignment_expression(Result *result, Node *left_node,
@@ -157,19 +136,13 @@ bool starts_with(const char *a, const char *b);
 
 char *read_filepath(const char *filepath);
 
-Array *create_array(void);
-Array *push_array(Array *array, void *item);
-void *get_array_item_at(Array *array, size_t index);
-void *pop_array(Array *array);
-
 char *stringify_node_value(Node *node);
-char *stringify_array(Array *array);
 char *stringify_token(Token *token);
 char *stringify_node(Node *node);
 char *stringify_result(Result *result);
 
 void print_tokens(Token *token);
-void print_node_tree(Node *node, int level, const char *prefix);
+void print_nodes(Node *node, int level, const char *prefix);
 void print_result(Result *result);
 void print_program(Node *nodes);
 
