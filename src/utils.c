@@ -233,7 +233,14 @@ char *stringify_node_value(Node *node) {
   char *destination = malloc(0);
   strcpy(destination, "");
 
-  if (node->type == NODE_LITERAL_NUMBER) {
+  if (node->type == NODE_LITERAL_IDENTIFIER) {
+    size_t identifier_length = strlen(node->identifier);
+    destination = string_duplicate(destination, identifier_length + 1);
+    strcat(destination, node->identifier);
+  } else if (node->type == NODE_LITERAL_BOOLEAN) {
+    destination = string_duplicate(destination, node->boolean ? 4 : 5);
+    strcat(destination, node->boolean ? "true" : "false");
+  } else if (node->type == NODE_LITERAL_NUMBER) {
     char buf[128];
     size_t number_length;
     if (node->base != 10) {
@@ -258,9 +265,6 @@ char *stringify_node_value(Node *node) {
     strcat(destination, "{");
     strcat(destination, items_string);
     strcat(destination, "}");
-  } else if (node->type == NODE_LITERAL_BOOLEAN) {
-    destination = string_duplicate(destination, node->boolean ? 4 : 5);
-    strcat(destination, node->boolean ? "true" : "false");
   } else if (node->type == NODE_LITERAL_FUNCTION) {
     length += 1;
     destination = string_duplicate(destination, length);

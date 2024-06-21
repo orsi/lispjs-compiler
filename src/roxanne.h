@@ -19,6 +19,7 @@ typedef struct {
 // lexing
 enum TokenType {
   TOKEN_IDENTIFIER,
+  TOKEN_KEYWORD,
   TOKEN_NUMBER,
   TOKEN_NUMBER_ALTERNATIVE_BASE,
   TOKEN_STRING,
@@ -39,6 +40,7 @@ struct Token {
   Token *next;
 };
 
+bool is_keyword(char *word, int length);
 Token *create_token(enum TokenType type, char *start, char *end, int length,
                     char *value);
 Token *lex(const char *start);
@@ -123,7 +125,6 @@ struct Node {
   };
 };
 
-int is_keyword(char *word, int length);
 char *get_operator(Token *tokens);
 Node *create_node(enum NodeType type, Token *start, Token *end);
 int get_operator_precedence(char *s);

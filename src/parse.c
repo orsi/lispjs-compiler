@@ -5,20 +5,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const char *keywords[] = {"if",    "import", "else", "export",
-                                 "false", "return", "true"};
-
-int is_keyword(char *word, int length) {
-  int is_match = 0;
-  for (size_t i = 0; i < sizeof(keywords) / sizeof(*keywords); i++) {
-    const char *key = keywords[i];
-    is_match = strncmp(word, key, length) == 0; // i hate this
-    if (is_match)
-      break;
-  }
-  return is_match;
-}
-
 char *get_operator(Token *tokens) {
   Token *current_token = tokens;
   size_t length = 0;
@@ -122,17 +108,20 @@ Node *parse_node(Token *token, Node *last_node) {
     return node;
   }
 
-  // literal true
-  if (token->type == TOKEN_IDENTIFIER && starts_with(token->value, "true")) {
+  // keywords
+  if (token->type == TOKEN_KEYWORD) {
     Node *node = create_node(NODE_LITERAL_BOOLEAN, token, NULL);
-    node->boolean = true;
-    return node;
-  }
+    if (starts_with(token->value, "true")) {
+      node->type = NODE_LITERAL_BOOLEAN;
+      node->boolean = true;
+    } else if (starts_with(token->value, "false")) {
+      node->type = NODE_LITERAL_BOOLEAN;
+      node->boolean = false;
+    } else {
+      printf("Keyword not implemented: %.*s", (int)token->length, token->start);
+      exit(1);
+    }
 
-  // literal false
-  if (token->type == TOKEN_IDENTIFIER && starts_with(token->value, "false")) {
-    Node *node = create_node(NODE_LITERAL_BOOLEAN, token, NULL);
-    node->boolean = false;
     return node;
   }
 

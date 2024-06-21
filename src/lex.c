@@ -4,6 +4,20 @@
 #include <stdlib.h>
 #include <string.h>
 
+static const char *keywords[] = {"if",    "import", "else", "export",
+                                 "false", "return", "true"};
+
+bool is_keyword(char *word, int length) {
+  bool is_match = false;
+  for (size_t i = 0; i < sizeof(keywords) / sizeof(*keywords); i++) {
+    const char *key = keywords[i];
+    is_match = strncmp(word, key, length) == 0; // i hate this
+    if (is_match)
+      break;
+  }
+  return is_match;
+}
+
 Token *create_token(enum TokenType type, char *start, char *end, int length,
                     char *value) {
   Token *token = malloc(sizeof(Token));
@@ -164,16 +178,23 @@ Token *lex_token(const char *token_start) {
       return token;
     }
 
-    // identifier
+    // identifiers and keywords
     if (isalpha(current[0])) {
       char *end = current;
-      while (isalnum(*end)) {
+      while (isalnum(*end) || starts_with(end, "_")) {
         end++;
       }
 
       size_t length = end - current;
-      Token *token =
-          create_token(TOKEN_IDENTIFIER, current, end, length, current);
+
+      enum TokenType type;
+      if (is_keyword(current, length)) {
+        type = TOKEN_KEYWORD;
+      } else {
+        type = TOKEN_IDENTIFIER;
+      }
+
+      Token *token = create_token(type, current, end, length, current);
       return token;
     }
 

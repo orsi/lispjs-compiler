@@ -185,6 +185,18 @@ int main(void) {
   Token *tokens;
   Node *node;
 
+  // tokens = lex(read_filepath("./src/mock/literals-identifiers.rox"));
+  // node = create_node(NODE_PROGRAM, tokens, NULL);
+  // node->body = parse(tokens, NULL);
+  // printf("\nliterals-identifiers.rox\n");
+  // print_program(node);
+
+  tokens = lex(read_filepath("./src/mock/literals-keywords.rox"));
+  node = create_node(NODE_PROGRAM, tokens, NULL);
+  node->body = parse(tokens, NULL);
+  printf("\nliterals-keywords.rox\n");
+  print_program(node);
+
   // tokens = lex(read_filepath("./src/mock/literals-numbers.rox"));
   // node = create_node(NODE_PROGRAM, parse(tokens, NULL));
   // printf("\nliterals.rox\n");
@@ -211,11 +223,11 @@ int main(void) {
   // printf("\narrays.rox\n");
   // print_program(node);
 
-  tokens = lex(read_filepath("./src/mock/blocks.rox"));
-  node = create_node(NODE_PROGRAM, tokens, NULL);
-  node->body = parse(tokens, NULL);
-  printf("\nblocks.rox\n");
-  print_program(node);
+  // tokens = lex(read_filepath("./src/mock/blocks.rox"));
+  // node = create_node(NODE_PROGRAM, tokens, NULL);
+  // node->body = parse(tokens, NULL);
+  // printf("\nblocks.rox\n");
+  // print_program(node);
 
   //   tokens = lex(read_filepath("./src/mock/functions.rox"));
   //   node = create_node(NODE_PROGRAM, parse(tokens, NULL));
