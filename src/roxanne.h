@@ -86,6 +86,11 @@ struct Node {
       Node *left;
       Node *right;
     };
+    // function
+    struct {
+      Node *parameters;
+      Node *block;
+    };
     // string templates
     struct {
       Node *parts;
@@ -97,7 +102,6 @@ struct Node {
       Node *if_then;
       Node *if_else;
     };
-    Function *function;
   };
 };
 

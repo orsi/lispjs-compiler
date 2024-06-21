@@ -189,32 +189,28 @@ char *stringify_node_value(Node *node) {
     strcat(destination, items_string);
     strcat(destination, "]");
   } else if (node->type == NODE_BLOCK) {
-    char *items_string = stringify_list(node->body);
-    length += strlen(items_string) + 2;
-    destination = string_duplicate(destination, length);
     strcat(destination, "{");
-    strcat(destination, items_string);
+    if (node->body != NULL) {
+      char *items_string = stringify_list(node->body);
+      length += strlen(items_string) + 2;
+      destination = string_duplicate(destination, length);
+      strcat(destination, items_string);
+    }
     strcat(destination, "}");
   } else if (node->type == NODE_FUNCTION) {
     length += 1;
     destination = string_duplicate(destination, length);
-    strcat(destination, "(");
+    strcat(destination, "|");
 
     // parameters
-    Function *function = node->function;
-    length += 4;
-    if (function->parameters == NULL || function->parameters->body == NULL) {
+    if (node->parameters != NULL) {
+      char *items_string = stringify_list(node->parameters);
+      length += strlen(items_string);
       destination = string_duplicate(destination, length);
-    } else {
-      char *parameters_string =
-          stringify_node_value(function->parameters->body);
-      length += strlen(parameters_string);
-      destination = string_duplicate(destination, length);
-      strcat(destination, parameters_string);
+      strcat(destination, items_string);
     }
-    strcat(destination, ") =>");
 
-    char *block_string = stringify_node_value(function->block);
+    char *block_string = stringify_node_value(node->block);
     length += strlen(block_string);
     destination = string_duplicate(destination, length);
     strcat(destination, block_string);

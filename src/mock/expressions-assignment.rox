@@ -7,3 +7,5 @@ c: "string";
 d: "inter${"pol"}ation";
 
 e1: (1 + 2) * 3 / #b0110;
+
+fn: |test;{};
