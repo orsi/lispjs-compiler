@@ -61,7 +61,7 @@ int main(void) {
   tokens = lex(read_filepath("./src/mock/literals-numbers.rox"));
   node = create_node(NODE_PROGRAM, tokens, NULL);
   node->body = parse(tokens, NULL);
-  printf("\nliterals.rox\n");
+  printf("\nliterals-numbers.rox\n");
   print_program(node);
 
   tokens = lex(read_filepath("./src/mock/literals-strings.rox"));

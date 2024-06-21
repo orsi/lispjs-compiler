@@ -4,8 +4,15 @@
 #include <stdlib.h>
 #include <string.h>
 
-static const char *keywords[] = {"if",    "import", "else", "export",
-                                 "false", "return", "true"};
+static const char *keywords[] = {
+    "true",  //
+    "false", //
+             // "if",     //
+             // "else",   //
+             // "import", //
+             // "exporcleat", //
+             // "return", //
+};
 
 bool is_keyword(char *word, int length) {
   bool is_match = false;
