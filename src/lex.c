@@ -10,7 +10,7 @@ static const char *keywords[] = {
              // "if",     //
              // "else",   //
              // "import", //
-             // "exporcleat", //
+             // "export", //
              // "return", //
 };
 
