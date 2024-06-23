@@ -1,4 +1,5 @@
-#include "roxanne.h"
+#include "parse.h"
+#include "evaluate.h"
 #include <ctype.h>
 #include <stdbool.h>
 #include <stdio.h>
@@ -27,6 +28,221 @@ int get_operator_precedence(char *s) {
     return 1;
   } else {
     return 0;
+  }
+}
+
+char *stringify_list(Node *node) {
+  size_t list_string_length = 0;
+  char *list_string = {0};
+  Node *current_node = node;
+
+  while (current_node) {
+    char *item_string = stringify_node_value(current_node);
+    size_t item_string_length = strlen(item_string);
+    list_string_length += item_string_length;
+    list_string = string_duplicate(list_string, list_string_length);
+    strcat(list_string, item_string);
+
+    if (current_node->next != NULL) {
+      list_string_length += 2;
+      list_string = string_duplicate(list_string, list_string_length);
+      strcat(list_string, ", ");
+    }
+
+    current_node = current_node->next;
+  }
+
+  return list_string;
+}
+
+char *stringify_node_value(Node *node) {
+  size_t length = 0;
+  char *destination = malloc(0);
+  strcpy(destination, "");
+
+  if (node->type == NODE_LITERAL_IDENTIFIER) {
+    size_t identifier_length = strlen(node->identifier);
+    destination = string_duplicate(destination, identifier_length + 1);
+    strcat(destination, node->identifier);
+  } else if (node->type == NODE_LITERAL_BOOLEAN) {
+    destination = string_duplicate(destination, node->boolean ? 4 : 5);
+    strcat(destination, node->boolean ? "true" : "false");
+  } else if (node->type == NODE_LITERAL_NUMBER) {
+    char buf[128];
+    size_t number_length;
+    if (node->base != 10) {
+      number_length = sprintf(buf, "%.16g(%.*s)", node->number,
+                              (int)node->start->length, node->start->start);
+    } else {
+      number_length = sprintf(buf, "%.16g", node->number);
+    }
+    destination = string_duplicate(destination, number_length);
+    strncat(destination, buf, number_length);
+  } else if (node->type == NODE_ARRAY) {
+    char *items_string = stringify_list(node->body);
+    length += strlen(items_string) + 2;
+    destination = string_duplicate(destination, length);
+    strcat(destination, "[");
+    strcat(destination, items_string);
+    strcat(destination, "]");
+  } else if (node->type == NODE_BLOCK) {
+    strcat(destination, "{");
+    if (node->body != NULL) {
+      char *items_string = stringify_list(node->body);
+      length += strlen(items_string) + 2;
+      destination = string_duplicate(destination, length);
+      strcat(destination, items_string);
+    }
+    strcat(destination, "}");
+  } else if (node->type == NODE_FUNCTION) {
+    length += 1;
+    destination = string_duplicate(destination, length);
+    strcat(destination, "|");
+
+    // parameters
+    if (node->parameters != NULL) {
+      char *items_string = stringify_list(node->parameters);
+      length += strlen(items_string);
+      destination = string_duplicate(destination, length);
+      strcat(destination, items_string);
+    }
+
+    char *block_string = stringify_node_value(node->block);
+    length += strlen(block_string);
+    destination = string_duplicate(destination, length);
+    strcat(destination, block_string);
+  } else if (node->type == NODE_LITERAL_STRING) {
+    destination = string_duplicate(destination, node->string->length + 2);
+    strncat(destination, "\"", 1);
+    strncat(destination, node->string->value, node->string->length);
+    strncat(destination, "\"", 1);
+  } else if (node->type == NODE_LITERAL_STRING_TEMPLATE) {
+    Result *result = evaluate(node);
+    destination = string_duplicate(destination, result->string.length + 2);
+    strncat(destination, "\"", 1);
+    strncat(destination, result->string.value, result->string.length);
+    strncat(destination, "\"", 1);
+  } else if (node->type == NODE_EXPRESSION) {
+    char *body_string = stringify_node_value(node->body);
+    length += strlen(body_string) + 2;
+    destination = string_duplicate(destination, length);
+    strcat(destination, "(");
+    strcat(destination, body_string);
+    strcat(destination, ")");
+  } else if (node->type == NODE_EXPRESSION_ASSIGNMENT) {
+    size_t identifier_length = strlen(node->variable->identifier);
+    char *value_string = stringify_node_value(node->value);
+    size_t value_length = strlen(value_string);
+    destination =
+        string_duplicate(destination, identifier_length + value_length + 1);
+    strcat(destination, node->variable->identifier);
+    strncat(destination, ":", 1);
+    strcat(destination, value_string);
+  } else if (node->type == NODE_EXPRESSION_BINARY) {
+    size_t operator_length = strlen(node->operator_symbol);
+    char *left_value_string = {0};
+    size_t left_value_length = 0;
+    char *right_value_string = {0};
+    size_t right_value_length = 0;
+
+    if (node->left != NULL) {
+      left_value_string = stringify_node_value(node->left);
+      left_value_length = strlen(left_value_string);
+    }
+
+    if (node->right != NULL) {
+      right_value_string = stringify_node_value(node->right);
+      right_value_length = strlen(right_value_string);
+    }
+
+    destination =
+        string_duplicate(destination, left_value_length + operator_length +
+                                          right_value_length + 1);
+
+    if (left_value_string != NULL) {
+      strcat(destination, left_value_string);
+    }
+    strcat(destination, node->operator_symbol);
+    if (right_value_string != NULL) {
+      strcat(destination, right_value_string);
+    }
+  } else {
+    char buf[128];
+    size_t number_length = sprintf(buf, "%.16g", node->number);
+    destination = string_duplicate(destination, number_length);
+    strncat(destination, buf, number_length);
+  }
+
+  return destination;
+}
+
+char *stringify_node(Node *node) {
+  char buffer[500];
+  int length;
+
+  if (node == NULL) {
+    return NULL;
+  }
+
+  switch (node->type) {
+  case NODE_EXPRESSION:
+    length = sprintf(buffer, "node:expression:%s", stringify_node_value(node));
+    break;
+  case (NODE_EXPRESSION_BINARY):
+    length = sprintf(buffer, "node:binary:%s", stringify_node_value(node));
+    break;
+  case (NODE_EXPRESSION_ASSIGNMENT):
+    length = sprintf(buffer, "node:assignment:%s", stringify_node_value(node));
+    break;
+  case NODE_LITERAL_BOOLEAN:
+    length = sprintf(buffer, "node:boolean:%s", stringify_node_value(node));
+    break;
+  case NODE_ARRAY: {
+    length = sprintf(buffer, "node:array:%s", stringify_node_value(node));
+    break;
+  }
+  case (NODE_LITERAL_IDENTIFIER):
+    length = sprintf(buffer, "node:identifier:%s", stringify_node_value(node));
+    break;
+  case (NODE_FUNCTION):
+    length = sprintf(buffer, "node:function:%s", stringify_node_value(node));
+    break;
+  case (NODE_LITERAL_NUMBER):
+    length = sprintf(buffer, "node:number:%s", stringify_node_value(node));
+    break;
+  case (NODE_LITERAL_STRING):
+    length = sprintf(buffer, "node:string:%s", stringify_node_value(node));
+    break;
+  case NODE_LITERAL_STRING_TEMPLATE:
+    length =
+        sprintf(buffer, "node:string template:%s", stringify_node_value(node));
+    break;
+  case NODE_CONDITIONAL:
+    length = sprintf(buffer, "node:conditional:%s", stringify_node_value(node));
+    break;
+  case NODE_BLOCK:
+    length = sprintf(buffer, "node:block:%s", stringify_node_value(node));
+    break;
+  case NODE_PROGRAM:
+    length = sprintf(buffer, "node:program");
+    break;
+  }
+  char *node_string = {0};
+  node_string = string_duplicate(node_string, length);
+  strcpy(node_string, buffer);
+  return node_string;
+}
+
+void print_nodes(Node *node, int level, const char *prefix) {
+  int indent = level * 2;
+  printf("%*s└ %s%s\n", indent, "", prefix, stringify_node(node));
+}
+
+void print_program(Node *node_program) {
+  Node *current = node_program->body;
+  while (current) {
+    print_nodes(current, 0, " ");
+    current = current->next;
   }
 }
 

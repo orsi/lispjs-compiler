@@ -1,16 +1,13 @@
-#include "roxanne.h"
+#include "evaluate.h"
+#include "lex.h"
+#include "parse.h"
+#include "utils.h"
 #include <signal.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
-#include <sys/syslimits.h>
-#include <unistd.h>
+#include <string.h>
 
 #define DEBUG 1
-
-enum Command {
-  COMMAND_RUN,
-};
 
 static volatile bool is_running = true;
 

@@ -1,4 +1,5 @@
-#include "roxanne.h"
+#include "lex.h"
+#include "utils.h"
 #include <ctype.h>
 #include <stdio.h>
 #include <stdlib.h>
@@ -23,6 +24,102 @@ bool is_keyword(char *word, int length) {
       break;
   }
   return is_match;
+}
+
+char *stringify_token(Token *token) {
+  char *token_string = NULL;
+  int length;
+  switch (token->type) {
+  case TOKEN_IDENTIFIER:
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->start);
+    token_string = malloc(sizeof("token:id:") + length);
+    if (token_string == NULL) {
+      printf("Error: malloc token_string\n");
+      exit(1);
+    }
+    sprintf(token_string, "token:id:%.*s", (int)token->length, token->start);
+    break;
+  case TOKEN_KEYWORD:
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->start);
+    token_string = malloc(sizeof("token:keyword:") + length);
+    if (token_string == NULL) {
+      printf("Error: malloc token_string\n");
+      exit(1);
+    }
+    sprintf(token_string, "token:keyword:%.*s", (int)token->length,
+            token->start);
+    break;
+  case TOKEN_NUMBER:
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->start);
+    token_string = malloc(sizeof("token:number:") + length);
+    if (token_string == NULL) {
+      printf("Error: malloc token_string\n");
+      exit(1);
+    }
+    sprintf(token_string, "token:number:%.*s", (int)token->length,
+            token->start);
+    break;
+  case TOKEN_STRING:
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->start);
+    token_string = malloc(sizeof("token:string:") + length);
+    if (token_string == NULL) {
+      printf("Error: malloc token_string\n");
+      exit(1);
+    }
+    sprintf(token_string, "token:string:%.*s", (int)token->length,
+            token->start);
+    break;
+  case TOKEN_SYMBOL:
+    length = snprintf(NULL, 0, "%.*s", (int)token->length, token->start);
+    token_string = malloc(sizeof("token:symbol:") + length);
+    if (token_string == NULL) {
+      printf("Error: malloc token_string\n");
+      exit(1);
+    }
+    sprintf(token_string, "token:symbol:%.*s", (int)token->length,
+            token->start);
+    break;
+  case TOKEN_END_OF_FILE:
+    token_string = malloc(sizeof("token:eof"));
+    if (token_string == NULL) {
+      printf("Error: malloc token_string\n");
+      exit(1);
+    }
+    strcpy(token_string, "token:eof");
+    break;
+  case TOKEN_STRING_TEMPLATE_START:
+    token_string =
+        string_duplicate(token_string, sizeof("token:string_template_start"));
+    strcpy(token_string, "token:string_template_start");
+    break;
+  case TOKEN_STRING_TEMPLATE_END:
+    token_string =
+        string_duplicate(token_string, sizeof("token:string_template_end"));
+    strcpy(token_string, "token:string_template_end");
+    break;
+  case TOKEN_STRING_TEMPLATE_PART_START:
+    token_string = string_duplicate(token_string,
+                                    sizeof("token:string_template_part_start"));
+    strcpy(token_string, "token:string_template_part_start");
+    break;
+  case TOKEN_STRING_TEMPLATE_PART_END:
+    token_string = string_duplicate(token_string,
+                                    sizeof("token:string_template_part_end"));
+    strcpy(token_string, "token:string_template_part_end");
+    break;
+  }
+
+  return token_string;
+}
+
+void print_tokens(Token *token) {
+  size_t length = 0;
+  while (token) {
+    printf("%s\n", stringify_token(token));
+    token = token->next;
+    length += 1;
+  }
+  printf("total: %zu\n", length);
 }
 
 Token *create_token(enum TokenType type, int length, char *start, char *end) {
