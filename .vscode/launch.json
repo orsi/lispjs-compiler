@@ -8,10 +8,10 @@
             "type": "lldb",
             "request": "launch",
             "name": "C - Debug",
-            "program": "${workspaceFolder}/bin/test",
+            "program": "${workspaceFolder}/bin/rox",
             "args": [],
             "cwd": "${workspaceFolder}",
-            "preLaunchTask": "build-test"
+            "preLaunchTask": "build-debug"
         }
     ]
 }

@@ -3,6 +3,16 @@
 #include <stdio.h>
 #include <string.h>
 
+Result *create_result(void) {
+  Result *result = malloc(sizeof(Result));
+  if (result == NULL) {
+    printf("Error: malloc result\n");
+    exit(1);
+  }
+
+  return result;
+}
+
 Result *evaluate_assignment_expression(Result *result, Node *left_node,
                                        Node *right_node) {
   Result *right_result = malloc(sizeof(Result));
@@ -78,11 +88,7 @@ Result *evaluate_binary_expression(Result *result, char *operator_symbol,
 }
 
 Result *evaluate(Node *node) {
-  Result *result = malloc(sizeof(Result));
-  if (result == NULL) {
-    printf("Error: malloc result\n");
-    exit(1);
-  }
+  Result *result = create_result();
 
   switch (node->type) {
   case NODE_EXPRESSION: {

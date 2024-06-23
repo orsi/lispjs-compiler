@@ -461,20 +461,13 @@ Node *parse(Token *token, Node *parent_node) {
   Node *last_node = NULL;
 
   Token *current_token = token;
-  while (current_token && current_token->type != TOKEN_END_OF_FILE) {
+  while (current_token) {
     // statement terminator
-    if (current_token->type == TOKEN_SYMBOL &&
-        starts_with(current_token->start, ";")) {
+    if (starts_with(current_token->start, ";") ||
+        starts_with(current_token->start, ",") ||
+        current_token->type == TOKEN_END_OF_FILE) {
       statements = statements->next = last_node;
       last_node = NULL;
-      current_token = current_token->next;
-      continue;
-    }
-
-    // elision
-    if (current_token->type == TOKEN_SYMBOL &&
-        starts_with(current_token->start, ",")) {
-      statements = statements->next = last_node;
       current_token = current_token->next;
       continue;
     }
