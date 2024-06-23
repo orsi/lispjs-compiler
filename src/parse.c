@@ -233,19 +233,6 @@ char *stringify_node(Node *node) {
   return node_string;
 }
 
-void print_nodes(Node *node, int level, const char *prefix) {
-  int indent = level * 2;
-  printf("%*s└ %s%s\n", indent, "", prefix, stringify_node(node));
-}
-
-void print_program(Node *node_program) {
-  Node *current = node_program->body;
-  while (current) {
-    print_nodes(current, 0, " ");
-    current = current->next;
-  }
-}
-
 Node *create_node(enum NodeType type, Token *start, Token *end) {
   Node *node = malloc(sizeof(Node));
   if (node == NULL) {

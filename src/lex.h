@@ -25,7 +25,6 @@ struct Token {
   Token *next;
 };
 char *stringify_token(Token *token);
-void print_tokens(Token *token);
 bool is_keyword(char *word, int length);
 Token *create_token(enum TokenType type, int length, char *start, char *end);
 Token *lex(const char *start);

@@ -21,7 +21,6 @@ typedef struct {
   };
 } Result;
 char *stringify_result(Result *result);
-void print_result(Result *result);
 Result *evaluate_assignment_expression(Result *result, Node *left_node,
                                        Node *right_node);
 Result *evaluate_binary_expression(Result *result, char *operator_symbol,

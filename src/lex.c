@@ -112,16 +112,6 @@ char *stringify_token(Token *token) {
   return token_string;
 }
 
-void print_tokens(Token *token) {
-  size_t length = 0;
-  while (token) {
-    printf("%s\n", stringify_token(token));
-    token = token->next;
-    length += 1;
-  }
-  printf("total: %zu\n", length);
-}
-
 Token *create_token(enum TokenType type, int length, char *start, char *end) {
   Token *token = malloc(sizeof(Token));
   if (token == NULL) {

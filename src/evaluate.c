@@ -4,8 +4,6 @@
 #include <stdlib.h>
 #include <string.h>
 
-void print_result(Result *result) { printf("%s\n", stringify_result(result)); }
-
 char *stringify_result(Result *result) {
   char string[500];
   size_t length = 0;

@@ -73,8 +73,6 @@ struct Node {
 };
 char *stringify_node_value(Node *node);
 char *stringify_node(Node *node);
-void print_nodes(Node *node, int level, const char *prefix);
-void print_program(Node *nodes);
 char *get_operator(Token *tokens);
 Node *create_node(enum NodeType type, Token *start, Token *end);
 int get_operator_precedence(char *s);
