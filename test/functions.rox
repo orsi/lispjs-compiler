@@ -1,10 +1,10 @@
-|{
+\{
     hi: 'hello!';
 };
 
-|a, b; {
+\a, b {
     c: "i'm a function!";
     //return a;
 };
 
-|a1: 5, b_something: "string"; {};
+\a1: 5, b_something: "string" {};

@@ -9,7 +9,7 @@
             "request": "launch",
             "name": "C - Debug",
             "program": "${workspaceFolder}/bin/rox",
-            "args": [],
+            "args": ["run", "./test/all.rox"],
             "cwd": "${workspaceFolder}",
             "preLaunchTask": "build-debug"
         }

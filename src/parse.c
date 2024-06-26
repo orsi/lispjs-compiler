@@ -23,9 +23,11 @@ char *get_operator(Token *token) {
 
 int get_operator_precedence(char *s) {
   if (starts_with(s, "*") || starts_with(s, "/") || starts_with(s, "%%")) {
-    return 2;
-  } else if (starts_with(s, "+") || starts_with(s, "-")) {
     return 1;
+  } else if (starts_with(s, "+") || starts_with(s, "-")) {
+    return 2;
+  } else if (starts_with(s, ":")) {
+    return 3;
   } else {
     return 0;
   }
@@ -37,7 +39,7 @@ char *stringify_list(Node *node) {
   Node *current_node = node;
 
   while (current_node) {
-    char *item_string = stringify_node_value(current_node);
+    char *item_string = stringify_node(current_node);
     size_t item_string_length = strlen(item_string);
     list_string_length += item_string_length;
     list_string = string_duplicate(list_string, list_string_length);
@@ -55,7 +57,7 @@ char *stringify_list(Node *node) {
   return list_string;
 }
 
-char *stringify_node_value(Node *node) {
+char *stringify_node(Node *node) {
   size_t length = 0;
   char *destination = malloc(0);
   strcpy(destination, "");
@@ -97,7 +99,7 @@ char *stringify_node_value(Node *node) {
   } else if (node->type == NODE_FUNCTION) {
     length += 1;
     destination = string_duplicate(destination, length);
-    strcat(destination, "|");
+    strcat(destination, "\\");
 
     // parameters
     if (node->parameters != NULL) {
@@ -107,7 +109,7 @@ char *stringify_node_value(Node *node) {
       strcat(destination, items_string);
     }
 
-    char *block_string = stringify_node_value(node->block);
+    char *block_string = stringify_node(node->block);
     length += strlen(block_string);
     destination = string_duplicate(destination, length);
     strcat(destination, block_string);
@@ -123,7 +125,7 @@ char *stringify_node_value(Node *node) {
     strncat(destination, result->string.value, result->string.length);
     strncat(destination, "\"", 1);
   } else if (node->type == NODE_EXPRESSION) {
-    char *body_string = stringify_node_value(node->body);
+    char *body_string = stringify_node(node->body);
     length += strlen(body_string) + 2;
     destination = string_duplicate(destination, length);
     strcat(destination, "(");
@@ -131,7 +133,7 @@ char *stringify_node_value(Node *node) {
     strcat(destination, ")");
   } else if (node->type == NODE_EXPRESSION_ASSIGNMENT) {
     size_t identifier_length = strlen(node->variable->identifier);
-    char *value_string = stringify_node_value(node->value);
+    char *value_string = stringify_node(node->value);
     size_t value_length = strlen(value_string);
     destination =
         string_duplicate(destination, identifier_length + value_length + 1);
@@ -146,12 +148,12 @@ char *stringify_node_value(Node *node) {
     size_t right_value_length = 0;
 
     if (node->left != NULL) {
-      left_value_string = stringify_node_value(node->left);
+      left_value_string = stringify_node(node->left);
       left_value_length = strlen(left_value_string);
     }
 
     if (node->right != NULL) {
-      right_value_string = stringify_node_value(node->right);
+      right_value_string = stringify_node(node->right);
       right_value_length = strlen(right_value_string);
     }
 
@@ -174,63 +176,6 @@ char *stringify_node_value(Node *node) {
   }
 
   return destination;
-}
-
-char *stringify_node(Node *node) {
-  char buffer[500];
-  int length;
-
-  if (node == NULL) {
-    return NULL;
-  }
-
-  switch (node->type) {
-  case NODE_EXPRESSION:
-    length = sprintf(buffer, "node:expression:%s", stringify_node_value(node));
-    break;
-  case (NODE_EXPRESSION_BINARY):
-    length = sprintf(buffer, "node:binary:%s", stringify_node_value(node));
-    break;
-  case (NODE_EXPRESSION_ASSIGNMENT):
-    length = sprintf(buffer, "node:assignment:%s", stringify_node_value(node));
-    break;
-  case NODE_LITERAL_BOOLEAN:
-    length = sprintf(buffer, "node:boolean:%s", stringify_node_value(node));
-    break;
-  case NODE_ARRAY: {
-    length = sprintf(buffer, "node:array:%s", stringify_node_value(node));
-    break;
-  }
-  case (NODE_LITERAL_IDENTIFIER):
-    length = sprintf(buffer, "node:identifier:%s", stringify_node_value(node));
-    break;
-  case (NODE_FUNCTION):
-    length = sprintf(buffer, "node:function:%s", stringify_node_value(node));
-    break;
-  case (NODE_LITERAL_NUMBER):
-    length = sprintf(buffer, "node:number:%s", stringify_node_value(node));
-    break;
-  case (NODE_LITERAL_STRING):
-    length = sprintf(buffer, "node:string:%s", stringify_node_value(node));
-    break;
-  case NODE_LITERAL_STRING_TEMPLATE:
-    length =
-        sprintf(buffer, "node:string template:%s", stringify_node_value(node));
-    break;
-  case NODE_CONDITIONAL:
-    length = sprintf(buffer, "node:conditional:%s", stringify_node_value(node));
-    break;
-  case NODE_BLOCK:
-    length = sprintf(buffer, "node:block:%s", stringify_node_value(node));
-    break;
-  case NODE_PROGRAM:
-    length = sprintf(buffer, "node:program");
-    break;
-  }
-  char *node_string = {0};
-  node_string = string_duplicate(node_string, length);
-  strcpy(node_string, buffer);
-  return node_string;
 }
 
 Node *create_node(enum NodeType type, Token *start, Token *end) {
@@ -279,7 +224,12 @@ Node *parse_node(Token *token, Node *last_node) {
     }
 
     normalized_number[normalized_length] = '\0';
-    node->number = strtol(normalized_number, NULL, node->base);
+
+    if (node->base == 10) {
+      node->number = strtod(normalized_number, NULL);
+    } else {
+      node->number = (double)strtoull(normalized_number, NULL, node->base);
+    }
     return node;
   }
 
@@ -417,10 +367,10 @@ Node *parse_node(Token *token, Node *last_node) {
   }
 
   // function
-  if (token->type == TOKEN_SYMBOL && starts_with(token->start, "|")) {
+  if (token->type == TOKEN_SYMBOL && starts_with(token->start, "\\")) {
     Node *node = create_node(NODE_FUNCTION, token, NULL);
 
-    token = token->next; // skip |
+    token = token->next; // skip \
 
     // parse parameters until block start
     Node head = {0};
@@ -436,12 +386,6 @@ Node *parse_node(Token *token, Node *last_node) {
         current_node = NULL;
         continue;
       }
-
-      // TODO: function params
-      // parsing the parameters breaks when we have an assignment expression
-      // that doesn't end in ; or ,
-      // e.g.
-      // |a: "string" {}
 
       // this is a parseable token at this point
       current_node = parse_node(token, current_node);
@@ -576,22 +520,12 @@ Node *parse_node(Token *token, Node *last_node) {
   if (token->type == TOKEN_SYMBOL && starts_with(token->start, ":") &&
       last_node != NULL && last_node->type == NODE_LITERAL_IDENTIFIER) {
     Node *node = create_node(NODE_EXPRESSION_ASSIGNMENT, token, NULL);
+    node->operator_symbol = get_operator(token);
     node->variable = last_node;
 
     token = token->next; // skip :
-
-    while (token && (!starts_with(token->start, ";") &&
-                     !starts_with(token->start, ","))) {
-
-      // TODO: function params
-      // parsing the parameters breaks when we have an assignment expression
-      // that doesn't end in ; or ,
-      // e.g.
-      // |a: "string" {}
-
-      node->value = parse_node(token, node->value);
-      token = node->value->end;
-    }
+    node->value = parse_node(token, node->value);
+    token = node->value->end;
 
     node->end = token;
     return node;
@@ -605,40 +539,36 @@ Node *parse_node(Token *token, Node *last_node) {
        starts_with(token->start, ">") || starts_with(token->start, "<=") ||
        starts_with(token->start, ">="))) {
 
-    Node *binary_root_node = last_node;
-    while (token && (!starts_with(token->start, ";") &&
-                     !starts_with(token->start, ")") &&
-                     !starts_with(token->start, "}"))) {
-      char *operator_symbol = get_operator(token);
+    // when we have multiple binary expressions in a row, we
+    // need to compare their operator precedence, and if the current
+    // binary expression has greater precendence, we have to steal
+    // the right operand from the lesser precedence, and replace
+    // it with this binary expression
+    char *operator_symbol = get_operator(token);
+    bool last_node_has_greater_precendence =
+        last_node != NULL && last_node->operator_symbol != NULL &&
+        get_operator_precedence(last_node->operator_symbol) >
+            get_operator_precedence(operator_symbol);
 
-      if (binary_root_node != NULL &&
-          binary_root_node->type == NODE_EXPRESSION_BINARY &&
-          get_operator_precedence(binary_root_node->operator_symbol) <
-              get_operator_precedence(operator_symbol)) {
-        // when we have multiple binary expressions in a row, we
-        // need to compare their operator precedence, and if the current
-        // binary expression has greater precendence, we have to steal
-        // the right operand from the lesser precedence, and replace
-        // it with this binary expression
-        Node *node = create_node(NODE_EXPRESSION_BINARY, token, NULL);
-        node->operator_symbol = operator_symbol;
-        node->left = binary_root_node->right;
-        binary_root_node->right = node;
-        token = token->next;
-        node->right = parse_node(token, NULL);
-        token = binary_root_node->end = node->end = node->right->end;
-      } else {
-        Node *node = create_node(NODE_EXPRESSION_BINARY, token, NULL);
-        node->operator_symbol = operator_symbol;
-        node->left = binary_root_node;
-        token = token->next;
-        node->right = parse_node(token, NULL);
-        token = node->end = node->right->end;
-        binary_root_node = node;
-      }
+    if (last_node_has_greater_precendence) {
+      Node *node = create_node(NODE_EXPRESSION_BINARY, token, NULL);
+      node->operator_symbol = operator_symbol;
+      node->left = last_node->right;
+      last_node->right = node;
+      token = token->next;
+      node->right = parse_node(token, NULL);
+      token = last_node->end = node->end = node->right->end;
+    } else {
+      Node *node = create_node(NODE_EXPRESSION_BINARY, token, NULL);
+      node->operator_symbol = operator_symbol;
+      node->left = last_node;
+      token = token->next;
+      node->right = parse_node(token, NULL);
+      token = node->end = node->right->end;
+      last_node = node;
     }
 
-    return binary_root_node;
+    return last_node;
   }
 
   static const char *token_types[] = {
@@ -665,18 +595,21 @@ Node *parse(Token *token, Node *parent_node) {
 
   Token *current_token = token;
   while (current_token) {
-    // statement terminator
-    if (starts_with(current_token->start, ";") ||
-        starts_with(current_token->start, ",") ||
-        current_token->type == TOKEN_END_OF_FILE) {
-      statements = statements->next = last_node;
-      last_node = NULL;
-      current_token = current_token->next;
-      continue;
-    }
+    if (current_token->type == TOKEN_END_OF_FILE ||
+        starts_with(current_token->start, ";") ||
+        starts_with(current_token->start, ",")) {
 
-    last_node = parse_node(current_token, last_node);
-    current_token = last_node->end;
+      if (last_node != NULL) {
+        statements = statements->next = last_node;
+        printf("%s\n", stringify_node(statements));
+        last_node = NULL;
+      }
+
+      current_token = current_token->next;
+    } else {
+      last_node = parse_node(current_token, last_node);
+      current_token = last_node->end;
+    }
   }
 
   return head.next;

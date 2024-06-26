@@ -30,6 +30,8 @@ struct Node {
   Token *start;
   // end token is exclusive and was not parsed
   Token *end;
+  // for both assignment and binary expressions
+  char *operator_symbol;
   // n.b. C11 anonymous union/struct
   union {
     // literals
@@ -42,14 +44,13 @@ struct Node {
     String *string;
     // expression, array, block, object, program
     Node *body;
-    // expression - assignment
+    // assignment
     struct {
       Node *variable;
       Node *value;
     };
-    // expression - binary
+    // binary
     struct {
-      char *operator_symbol;
       Node *left;
       Node *right;
     };
@@ -71,7 +72,6 @@ struct Node {
     };
   };
 };
-char *stringify_node_value(Node *node);
 char *stringify_node(Node *node);
 char *get_operator(Token *tokens);
 Node *create_node(enum NodeType type, Token *start, Token *end);

@@ -1,0 +1,120 @@
+;;;;;;;;
+
+[1,true,#b1,"hello!"];
+
+[[1,2], ["hi"], "no", "way", 123];
+
+{
+    cool: {
+        nested: "no!";
+    },
+    123,
+    "hi",
+    [1,2,"3"];
+};
+
+{
+    arbitrary: "keys";
+    like: 1;
+    hi: "are great";
+};
+
+{
+    how: {
+        far: {
+            can: {
+                we: {
+                    go: "?";
+                };
+            };
+        };
+    };
+};
+
+a: 1;
+
+b: 1 + 2;
+
+c: "string";
+
+d: "inter${"pol"}ation";
+
+e1: (1 + 2) * 3 / #b0110;
+
+fn: \test{};
+
+-1 + -2;
+
+1 + 2 * 3;
+
+1 + 2;
+
+(1 + 2) * ((1 + 2) * 3); // 27
+
+((5*(5+2))+((3*-1)+2)) / 2;
+
+\{
+    hi: 'hello!';
+};
+
+\a, b {
+    c: "i'm a function!";
+    //return a;
+};
+
+\a1: 5, b_something: "string" {};
+
+hi;
+
+bye;
+
+a_b_1_2;
+
+true;
+
+false;
+
+//if;
+//
+//else;
+//
+//import;
+//
+//export;
+//
+//return;
+//
+
+1;
+1.0;
+10 000.01;
+1_2_3_4_5.1_2_3_4;
+
+#b110;                  // binary
+#h123456789abcdef;      // hex
+#o12345678;             // octal
+
+"hello!";
+
+"no escaping\awe\awef\aw\efa\wef\f\2332\5t\n\wef\fa\aw\awef\\";
+
+"multi
+line
+string";
+
+"I'm a comment
+// inside a string!";
+
+"do         tabs            work?";
+
+"string ${"inter${"pol"}ation"} wat";
+
+"nested ${"binary ${5}+${6}=${5+6}"} operations: ${87 * 4 / 9} - ${1}+${2}*${3}=${1 + 2 * 3}";
+
+"${5+6}";
+
+"${(1+2) * (2+2)}";
+
+"omg ${"I think ${"I did it (${1 + 2}) * (${2+2}) = ${(1+2) * (2+2)}"}"}";
+
+"1 + 2 * 3 = ${1 + 2 * 3}, and should be ${7} yo";
